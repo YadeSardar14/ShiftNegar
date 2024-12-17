@@ -248,6 +248,71 @@
         
 
 
+        form.request_popup{
+
+            
+            background-color: rgba(34, 13, 129, 0.705);
+            color: #ffffff;
+            border-radius: 1rem;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: fixed;
+            padding: 1rem;
+            height: auto;
+            top: 20%;
+            left: 20%;
+            right: 20%;
+            
+        }
+
+        form.request_popup input{
+
+            margin-right: 0.7rem;
+            
+        }
+
+        form label.title{
+
+            margin-bottom: 1rem;
+        }
+
+        form.request_popup button{
+
+            margin-top: 1rem;
+            width: 90%;
+            height: 2rem;
+            color: #ffffff94;
+            font-size: 15;
+        }
+
+        form input.req_text{
+
+            font-family: "samin", sans-serif;
+            border: none;
+            outline: none;
+            border-radius: 3px;
+            background: rgba(150, 208, 255, 0.63);
+            color: rgba(35, 99, 218, 0.986);
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: -1px 2px 5px rgba(2, 22, 59, 0.486);
+
+
+            height: 1.5rem;
+            width: auto;
+            margin-top: 0.8rem;
+            font-size: 11px;
+        }
+
+        form input.req_text::placeholder{
+            font-weight: bolder;
+            color: #4827ff7c;}
+
+
     </style>
 </head>
 <body>
@@ -318,6 +383,27 @@
         <tbody>
         </tbody>
     </table>
+
+
+    <form class="request_popup">
+        <label class="title">درخواست شیفت</label>
+        <div class="form_col">
+        <label>شیفت صبح</label>
+        <input type="checkbox">
+        </div>
+        <div class="form_col">
+        <label>شیفت عصر</label>
+        <input type="checkbox">
+        </div>
+        <div class="form_col">
+        <label>شیفت شب</label>
+        <input type="checkbox">
+        </div>
+        <input class="req_text" type="text" placeholder="اگر شرحی دارید اینجا بنویسید.">
+        <button class="btn" type="button" onclick="AddRequest()">تایید</button>
+       
+
+    </form>
 </body>
 
 <script>
@@ -344,6 +430,8 @@ var MyHourWork
         isAdmin = Boolean(data[0]);
         document.querySelector("p.user").innerHTML = name;
 
+                
+        document.querySelector("form.request_popup").style.display = "none";
         document.querySelector("table.myshifts").style.display = "none";
         document.querySelector("div#back_btn").style.display = "none";
         SetMainPage();
@@ -407,7 +495,11 @@ function requesthandler(state,day){
 const DepartmentsID = document.querySelector("select.dep").value;
 const data =[UserID,DepartmentsID,day.id];
 
+const form = document.querySelector("form.request_popup");
+form.style.display = "flex";
+
 }
+
 
 function SetTableMyShifts(dep,data){
 

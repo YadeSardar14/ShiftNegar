@@ -12,6 +12,8 @@ DBconfig = {
     'database': 'datashift'
 }
 
+CURRENT_WEEKDATE = None
+
 def GetUser(username,password):
     with sql.connect(**DBconfig) as con:
         cursor = con.cursor()
@@ -22,10 +24,20 @@ def GetUser(username,password):
         return User
 
 
+def WeekDate(saturday : datetime.date):
+    week = [saturday,
+            saturday+timedelta(days=1),
+            saturday+timedelta(days=2),
+            saturday+timedelta(days=3),
+            saturday+timedelta(days=4),
+            saturday+timedelta(days=5),
+            saturday+timedelta(days=6),
+            ]
+    return week
 
 def GetWeekShifts(WeekNum):
     last_sat_date = None
-    ret = []
+    ret = None
     with sql.connect(**DBconfig) as con:
         cursor = con.cursor()
         cursor.execute("""
@@ -88,26 +100,11 @@ GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username;
         """
         ,(last_sat_date))
 
-        ret.append(cursor.fetchall())
+        ret = cursor.fetchall()
         cursor.close()
-        
-    # if WeekNum > 1 and last_sat_date:
 
-    #     with sql.connect(**DBconfig) as con:
-    #         cursor = con.cursor()
-            
-    #         # new_last = cursor.execute("SELECT max(%s - INTERVAL (7) DAY) FROM shiftassignments",(last_sat_date))
-    #         # new_last = str(cursor.fetchone()[0])
-    #         start_date = last_sat_date[0] - timedelta(days=7)
-    #         start_date = start_date
-
-    #         for w in range(WeekNum):
-                
-    #             cursor.execute("SELECT p.name,pos.name,p.contractType, GROUP_CONCAT(CASE WHEN log.day = 0 THEN shifts.type END) AS sat, GROUP_CONCAT(CASE WHEN log.day = 1 THEN shifts.type END) AS sun, GROUP_CONCAT(CASE WHEN log.day = 2 THEN shifts.type END) AS mon, GROUP_CONCAT(CASE WHEN log.day = 3 THEN shifts.type END) AS tue, GROUP_CONCAT(CASE WHEN log.day = 4 THEN shifts.type END) AS wed, GROUP_CONCAT(CASE WHEN log.day = 5 THEN shifts.type END) AS thu, GROUP_CONCAT(CASE WHEN log.day = 6 THEN shifts.type END) AS fri FROM shiftassignments AS log JOIN personnel AS p ON (log.PersonnelID = p.PersonnelID) JOIN shifts ON (log.ShiftsID = shifts.ShiftsID) JOIN datashift.positions AS pos ON (p.positionID = pos.PositionsID) WHERE log.date BETWEEN %s AND %s GROUP BY p.name , pos.name , p.contractType;",(start_date,last_sat_date))
-    #             last_sat_date = start_date
-    #             start_date = last_sat_date[0] - timedelta(days=7)
-                
-    #             ret.append(cursor.fetchall())
+        global CURRENT_WEEKDATE
+        CURRENT_WEEKDATE = WeekDate(last_sat_date[0])
     
     return ret
 
@@ -200,7 +197,8 @@ def getdata(key):
     data = []
 
     if key == "GetTable":
-        data = GetWeekShifts(1)[0]
+        data = GetWeekShifts(1)
+    
 
     elif key == "GetDepartment":
         with sql.connect(**DBconfig) as con:
