@@ -1,0 +1,293 @@
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Negar</title>
+
+
+    <style>
+        
+
+        @font-face {
+            font-family: "samin";
+            src: 
+            url("../static/Samim.woff") format("woff"),
+            url("../static/Samim.woff2") format("woff2"),
+            url("../static/Samim.ttf") format("truetype");
+            font-weight: normal;
+            font-style: normal;
+        }
+
+
+        body{
+
+            background-image: url("../static/back.jpg");
+            background-position: center;
+            background-attachment: fixed;
+            background-size: cover;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* height: 100vh; */
+        }
+
+        form.singup{
+
+            font-family: "samin" , sans-serif;
+            background: hsla(240, 100%, 9%, 0.61);
+            padding: 2rem;
+            padding-right: 2.5rem;
+            padding-left: 2.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 7px black;
+            max-width: 400px;
+        }
+
+        label{
+
+            display: block;
+            color: rgb(255, 255, 255);
+            text-shadow: -1px 1px 2px black;
+            margin-bottom: 0.8 rem;
+            font-size: 14px;
+            font-weight: bold;
+            direction: rtl;
+
+
+        }
+
+        input.inp{
+
+            border: none;
+            border-radius: 3px;
+            background: rgba(150, 208, 255, 0.3);
+            box-shadow: -1px 2px 5px rgb(2, 22, 59);
+            color: rgb(0, 0, 75);
+            direction: rtl;
+
+
+            height: 1.8rem;
+            width: 10rem;
+            padding: 0.6rem;
+            margin-bottom: 1rem;
+            
+
+        }
+
+        
+        input:focus{
+            outline: none;
+        }
+
+
+        select.inp{
+
+            font-family: "samin", sans-serif;
+            border: none;
+            border-radius: 3px;
+            background: rgba(150, 208, 255, 0.3);
+            box-shadow: -1px 2px 5px rgb(2, 22, 59);
+            color: rgb(47, 0, 155);
+            direction: rtl;
+            font-size: 10px;
+            font-weight: bold;
+
+            height: 2rem;
+            width: 10rem;
+            padding: 0.4rem;
+            margin-bottom: 1rem;
+            
+
+        }
+
+       option {
+
+        border: none;
+        border-radius: 3px;
+        background: rgba(133, 160, 250, 0.651);
+        box-shadow: -1px 2px 5px rgb(2, 22, 59);
+        color: rgb(47, 0, 155);
+        direction: rtl;
+
+       }
+
+        button.btn{
+
+            font-family: "samin", sans-serif;
+            border: none;
+            border-radius: 3px;
+            background: rgb(162, 188, 236);
+            color: rgba(0, 0, 134, 0.616);
+            box-shadow: 0px 1.5px 2px black;
+            font-weight: bold;
+
+
+            width: 10rem;
+            height: 1.7rem;
+            margin-top: 1rem;
+
+
+        }
+
+
+        input.inp::placeholder{
+            font-family: "samin" , sans-serif;
+            font-size: 0.6rem;
+            color: rgba(7, 7, 155, 0.384);
+        }
+
+
+        input.btn:hover{
+
+            background: rgb(97, 147, 238);
+        }
+
+    </style>
+</head>
+<body>
+    <form class="singup">
+
+        <label>نام‌ و نام‌خانوادگی</label>
+        <input name="name" class="inp" type="text" placeholder="نام خود را وارد کنید" required>
+        <br>
+        <label>نام‌کاربری</label>
+        <input name="username" class="inp" type="text" placeholder="نام کاربری خود را وارد کنید" required>
+        <br>
+        <label>رمزعبور</label>
+        <input name="password" class="inp" type="password" placeholder="رمزعبور خود را وارد کنید" required>
+        <br>
+        <label >سمت</label>
+        <select name="PositionsID" class="inp" id="position"> 
+        </select> 
+        <label>نوع قرارداد</label>
+        <select name="contractType" class="inp" onchange="HourlyCheck(this)"> 
+            <option value="official">رسمی</option>
+            <option value="hourly">ساعتی</option>
+        </select>
+        <br>
+        <!-- <label id = "test">ساعت کار در هفته</label>
+        <input class="inp" type="text" placeholder="ساعت قرارداد خود را وارد کنید" required>
+        <br> -->
+        <button class="btn" onclick="singup(this.parentElement)" type="button">ثبت‌نام</button>
+        
+    </form>
+</body>
+
+<script>
+
+const host = "http://127.0.0.1:5000";
+
+(()=>{
+
+fetch(host+"/GetData/GetPositions",{
+    method: 'GET',
+headers: { 'Content-Type': 'application/json',}})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+   
+    if (response[0])
+    SetPositions(response);
+
+    else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
+})()
+
+
+function HourlyCheck(contract){
+
+    const form = contract.parentElement;
+    if (contract.value == "hourly"){
+
+    const btn = form.lastElementChild;
+
+    const lab = document.createElement("label") ;
+    lab.textContent = "ساعت کار در هفته";
+    lab.id = "hourly"
+
+    const inp = document.createElement("input");
+    inp.type = "number";
+    inp.name = "workinghours";
+    inp.placeholder = 'ساعت قرارداد هفتگی';
+    inp.required = true;
+    inp.className = 'inp';
+    inp.id = "hourly"
+
+    const breakline = document.createElement("br");
+    breakline.id = "hourly"
+
+    form.insertBefore(lab,btn);
+    form.insertBefore(inp,btn);
+    form.insertBefore(breakline,btn);
+    }
+
+    else{
+
+        let hourlyElements = form.querySelectorAll("#hourly");
+        hourlyElements.forEach((element) => element.remove());
+
+    }
+
+}
+
+
+
+function SetPositions(data){
+
+let pos = document.querySelector("select#position");
+data.forEach(ob => {
+    let op = document.createElement("option");
+    op.innerHTML = ob["name"];
+    op.value = ob["PositionsID"];
+    pos.appendChild(op);
+})
+
+}
+
+
+function singup(form){
+
+const formData = new FormData(form);
+
+if(form.checkValidity()){
+
+fetch(host+"/SaveUser",{
+    method : "POST",
+    body : formData
+})
+.then(response => {
+    if (response.ok)
+    return response.json();
+    else
+    console.error("save Conn Ereor");
+    
+})
+.then(response => {
+
+    if (response[0] == "uniqueError")
+    alert("این نام کاربری قبلا انتخاب شده است، لطفا یک نام کاربری دیگر انتخاب کنید.");
+    else if (response[0]="ok")
+    window.location = host+"/SingIn";
+
+})
+.catch(er=>{
+    console.error("Save Fetch Ereor");
+})
+
+}else alert("لطفا تمام فیلد ها را پرکنید.");
+}
+
+    
+</script>
+</html>

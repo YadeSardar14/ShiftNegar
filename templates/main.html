@@ -1,0 +1,656 @@
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Negar</title>
+
+    <style>
+
+        @font-face{
+
+            font-family: "samin";
+            src:
+            url("../static/Samim.woff") format("woff"),
+            url("../static/Samim.woff2") format("woff2"),
+            url("../static/Samim.ttf") format("truetype");
+
+            font-size: normal;
+            font-style: normal;
+        }
+
+
+        body{
+
+            /* background-image: url("https://static.vecteezy.com/system/resources/previews/023/639/130/non_2x/molecular-structure-with-hospital-cross-for-medical-chemistry-and-science-concept-background-illustration-vector.jpg"); */
+            background-image: url("../static/bakcBS.jpg"); 
+            background-position: center;
+            background-attachment: fixed;
+            background-size: cover;
+            font-family: "samin" , sans-serif;
+            direction: rtl;
+        }
+        table{
+
+            border-collapse: collapse;
+            direction: rtl;
+            margin: auto;
+            width: 90%;
+            
+        }
+
+        th,td{
+            border: 1px solid rgba(37, 139, 255, 0.473);
+            text-align: center;
+            padding: 2px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+            font-size: 10;
+            background-color: rgba(140, 255, 255, 0.699);
+            color: rgba(60, 54, 128, 0.685);
+            font-weight: 600;
+
+        }
+
+        td:nth-child(even){
+
+            background-color: rgba(203, 253, 255, 0.664);
+        }
+
+        th{
+
+            font-weight: bold;
+            background: rgba(74, 158, 255, 0.575);
+            color: #ffffff;
+            text-shadow: -1px 1px 1px rgba(0, 0, 0, 0.356);
+        }
+
+        th.day{
+
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            padding: 8px;
+            color: rgba(228, 255, 254, 0.733);
+            
+        }
+
+
+
+    .tdhoverefect{
+    background: rgba(123, 255, 255, 0.849);
+    outline: dashed;
+    outline-color: rgb(111, 126, 255);
+    cursor: pointer;
+
+        }
+
+        button.btn{
+
+            font-family: "samin", sans-serif;
+            border: none;
+            border-radius: 3px;
+            background: rgba(150, 208, 255, 0.63);
+            color: rgba(35, 99, 218, 0.986);
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: -1px 2px 5px rgba(2, 22, 59, 0.486);
+            
+        }
+
+        div.btn button{
+
+            margin: 0.2rem;
+            height: 2.5rem;
+            flex: 1;
+            padding: 0.6rem;
+            box-shadow: -1px 2px 5px rgba(2, 22, 59, 0.486);
+
+        }
+
+        div.btn{
+
+            display: flex;
+            padding: 0;
+            margin: 0 auto;
+            width: 90%;
+            margin-top: 5%;
+        }
+
+        button.btn:hover{
+
+            background-color:  rgba(96, 179, 247, 0.781);
+        }
+
+
+        img.user{
+
+            width: 1.5rem;
+            height: 1.5rem;
+            opacity: 0.8;
+        }
+
+        p{
+            font-family: "samin" sans-serif;
+            font-weight: bolder;
+            font-size: 13px;
+            color: rgba(237, 255, 252, 0.911);
+            margin: 0;
+    }
+        p.user{
+
+            font-size: 12;
+            margin: 0;
+            margin-top: 3%;
+         
+        }
+
+        div.info{
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0.2rem;
+            margin: 0 auto;
+            margin-top: 5%;
+            width: 90%;
+            height: 12%;
+            max-width: 90%;
+           
+            background-color: rgba(2, 4, 121, 0.171);
+            box-shadow: -1.5px 3px 6px rgba(5, 26, 65, 0.308);;
+            border-radius: 5px;
+        }
+
+
+        div.info button{
+
+            margin: 0.2rem;
+            height: 1.8rem;
+            padding: 0.1rem;
+            padding-bottom: 0.5rem;
+            width: 6rem;
+            font-size: 12;
+            box-shadow: -1px 2px 5px rgba(2, 22, 59, 0.308);
+            color: rgba(255, 255, 255, 0.562);
+            background: rgba(43, 75, 255, 0.288);
+        }
+
+        div.info .c1{
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-right: 0.3rem;
+        }
+        
+        div.info .c3 p{
+
+            font-size: 12px;
+            margin: 0;
+            padding: 0.1rem;
+
+        }
+
+        div.info .c2{
+        
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+
+        div.info .c3{ 
+
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            margin-left: 0.5rem;
+            max-height: 100%;
+            direction: ltr;
+        }
+
+        p.dep{
+
+            font-size: 13;
+            margin-top: 0.5rem;
+            color: rgb(202, 225, 255);
+            
+        }
+        
+        select.dep{
+
+            font-family: "samin", sans-serif;
+            border: none;
+            border-radius: 3px;
+            background: rgba(115, 192, 255, 0.63);
+            color: rgba(35, 99, 218, 0.986);
+            text-align: center;
+            font-size: 12px;
+            font-weight: bold;
+
+            margin: 0.4rem;
+            height: 1.8rem;
+            padding: 0.1rem;
+            width: 6rem;
+            box-shadow: -1px 2px 5px rgba(6, 31, 77, 0.199);
+            
+        }
+
+        button:focus, select:focus {   
+            outline-color: rgba(3, 42, 150, 0.63);
+            outline-style: dashed;
+        }
+        
+
+
+    </style>
+</head>
+<body>
+
+    <div class="info">
+
+    <div class="c1">
+    <div style="display: flex;"><img class="user" src="../static/userA.png">
+    <p class="user"></p> </div>
+    <button class="btn" onclick="exit()">خروج</button>
+        </div>
+
+
+    <div class="c2">
+        <p class="dep">برنامه پرسنل بخش</p>
+        <select class="dep" onchange="SetTable();">
+        </select>
+    </div>
+        
+        
+    <div class="c3" id="shifts"></div>
+
+    </div>
+
+    <div class="btn" id="main_btn">
+    <button class="btn" onclick="showMyShifts()">شیفت های من</button>
+    <button class="btn">درخواست ها</button>
+    </div>
+
+    <div class="btn" id="back_btn">
+    <button class="btn" onclick="back()">بازگشت</button>
+    </div>
+
+    <br>
+    <table class="main">
+        <thead>
+            <tr>
+            <th>نام و نام‌خانوادگی</th>
+            <th>سمت</th>
+            <th>قرارداد</th>
+            <th class="day">شنبه</th>
+            <th class="day">یکشنبه</th>
+            <th class="day">دوشنبه</th>
+            <th class="day">سه‌شنبه</th>
+            <th class="day">چهارشنبه</th>
+            <th class="day">پنج‌شنبه</th>
+            <th class="day">جمعه</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+    <table class="myshifts">
+        <thead>
+            <tr>
+            <th>ساعت کاری</th>
+            <th>اضافه کار</th>
+            <th class="day" id="0">شنبه</th>
+            <th class="day" id="1">یکشنبه</th>
+            <th class="day" id="2">دوشنبه</th>
+            <th class="day" id="3">سه‌شنبه</th>
+            <th class="day" id="4">چهارشنبه</th>
+            <th class="day" id="5">پنج‌شنبه</th>
+            <th class="day" id="6">جمعه</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</body>
+
+<script>
+
+const host = "http://127.0.0.1:5000";
+var name;
+var Username;
+var UserID;
+var isAdmin;
+var AllShifts = null;
+var MyShifts = [];
+var AllHourWorks = null;
+var MyHourWork
+
+(()=> {
+    let data = GetCookie("data");
+    if (!data)
+    window.location = host+"/SingIn";
+    else{
+        data = JSON.parse(data);
+        name = data[1];
+        Username = GetCookie("username");
+        UserID = data[2];
+        isAdmin = Boolean(data[0]);
+        document.querySelector("p.user").innerHTML = name;
+
+        document.querySelector("table.myshifts").style.display = "none";
+        document.querySelector("div#back_btn").style.display = "none";
+        SetMainPage();
+    }
+
+   
+})()
+
+
+function GetCookie(key){
+    if(document.cookie){
+    let data = document.cookie.split(key+"=")[1].split(";")[0];
+    return data;}
+    return null;
+}
+
+
+function AddRow(table,data){
+
+    const newRow = document.createElement("tr");
+
+    data.forEach(cell => {
+        const td = document.createElement("td");
+        td.textContent = cell;
+        newRow.appendChild(td);
+    })
+
+    table.appendChild(newRow);
+
+}
+
+
+function SetDepartments(data){
+
+    let dep = document.querySelector("select.dep");
+    data.forEach(ob => {
+        let op = document.createElement("option");
+        op.innerHTML = ob["name"];
+        op.value = ob["DepartmentsID"];
+        dep.appendChild(op);
+    })
+    
+}
+
+
+function SetShifts(data){
+    const shifts = document.querySelector("div#shifts");
+    data.forEach(shift => {
+
+        let p = document.createElement("p");
+        p.innerHTML =shift["type"]+ " : " + shift["startTime"]+ " to " +shift["endTime"] ;
+        p.value = shift["ShiftsID"];
+        shifts.appendChild(p);
+    })
+
+}
+
+
+function requesthandler(state,day){
+
+const DepartmentsID = document.querySelector("select.dep").value;
+const data =[UserID,DepartmentsID,day.id];
+alert(data);
+}
+
+function SetTableMyShifts(dep,data){
+
+if(!data)
+return;
+    
+const my_table = document.querySelector("table."+"myshifts");
+let my_tbody = my_table.querySelector("tbody");
+my_tbody.remove();
+my_tbody = document.createElement("tbody");
+my_table.appendChild(my_tbody);
+
+let nul = true;
+for(let row of data){
+let d = row.pop();
+if(d==dep.value){
+nul = false;
+AddRow(my_tbody,MyHourWork.concat(row));
+break;}    }
+
+if(nul)
+AddRow(my_tbody,MyHourWork.concat([null,null,null,null,null,null,null]));
+
+if (my_tbody){
+   
+    let tr = my_tbody.querySelectorAll("td");
+    let headers = my_table.querySelectorAll("thead th")
+    tr.forEach((td,i) => {
+        if (headers[i].className=="day"){
+        td.addEventListener("click",()=>{requesthandler(td.textContent,headers[i])});
+        td.style.backgroundColor = "rgba(131, 255, 193, 0.849)";
+        td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); })
+        td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); })
+    }
+
+    })
+}
+
+
+}
+
+
+
+function SetTable(){
+
+const table = document.querySelector("table."+"main");
+let tbody = table.querySelector("tbody");
+tbody.remove();
+tbody = document.createElement("tbody");
+table.appendChild(tbody);
+
+const my_table = document.querySelector("table."+"myshifts");
+let my_tbody = my_table.querySelector("tbody");
+my_tbody.remove();
+my_tbody = document.createElement("tbody");
+my_table.appendChild(my_tbody);
+
+
+if (AllShifts){
+
+    const dep = document.querySelector("select.dep");
+    const all = JSON.parse(AllShifts);
+    all.forEach(row => {
+        row.pop(); 
+        let user_dep = row.pop(); 
+        if (user_dep == dep.value)
+        AddRow(tbody,row);      });
+    
+        
+        
+        let myshifts = JSON.stringify(MyShifts);
+        SetTableMyShifts(dep,JSON.parse(myshifts));
+
+}else{
+
+fetch(host+"/GetData/GetTable",{
+    method: 'GET',
+headers: { 'Content-Type': 'application/json',}})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+    
+    let dep = document.querySelector("select.dep");
+    if (response[0]){
+    AllShifts = JSON.stringify(response);
+    
+    response.forEach(row => {
+        const username = row.pop(); 
+        if (Username==username)
+        MyShifts.push(row.slice(3));
+
+        let user_dep = row.pop(); 
+        if (user_dep == dep.value)
+        AddRow(tbody,row);
+    });
+
+
+    try{
+    let myshifts = JSON.stringify(MyShifts);
+    SetTableMyShifts(dep,JSON.parse(myshifts));
+    }catch{
+    console.log("Error in set my shift table.");}
+
+
+    }else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
+
+}
+}
+
+
+
+function SetMainPage(){
+
+fetch(host+"/GetData/GetDepartment",{
+    method: 'GET',
+headers: { 'Content-Type': 'application/json',}})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+    
+    if (response[0])
+    SetDepartments(response);
+
+    else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
+
+
+
+fetch(host+"/GetData/GetShifts",{
+method: 'GET',
+headers: { 'Content-Type': 'application/json',}})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+    
+    if (response[0])
+    SetShifts(response);
+
+    else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
+
+
+
+fetch(host+"/GetData/GetHourWorkState",{
+method: 'GET',
+headers: { 'Content-Type': 'application/json',}})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+    
+    if (response[0]){
+
+        for(let user of response){
+        if(user["username"]==Username){
+        MyHourWork = [user["worktime"],user["state"]];
+        break;} }
+
+    AllHourWorks = response;}
+
+    else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
+
+
+SetTable();
+setTimeout(SetTable,1000);
+
+}
+
+function exit(){
+  
+    document.cookie.split(";").forEach(cookie => {
+        document.cookie = cookie.split("=")[0]+ "=;"
+    })
+  
+    window.location = host+"/SingIn";
+
+}
+
+function showMyShifts(){
+
+document.querySelector("p.dep").innerHTML="شیفت های بخش";
+
+document.querySelector("table.main").style.display = "none";
+document.querySelector("table.myshifts").style.display = "table";
+
+document.querySelector("div#main_btn").style.display = "none";
+document.querySelector("div#back_btn").style.display = "flex";
+
+
+}
+
+function back(){
+
+document.querySelector("p.dep").innerHTML="برنامه پرسنل بخش";
+
+document.querySelector("div#main_btn").style.display = "flex";
+document.querySelector("div#back_btn").style.display = "none";
+
+document.querySelector("table.main").style.display = "table";
+document.querySelector("table.myshifts").style.display = "none";
+
+}
+
+</script>
+</html>

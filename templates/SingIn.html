@@ -1,0 +1,190 @@
+<html lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift Negar</title>
+
+
+    <style>
+        
+
+        @font-face {
+            font-family: "samin";
+            src: 
+            url("../static/Samim.woff") format("woff"),
+            url("../static/Samim.woff2") format("woff2"),
+            url("../static/Samim.ttf") format("truetype");
+            font-weight: normal;
+            font-style: normal;
+        }
+
+
+        body{
+
+            background-image: url("../static/back.jpg");
+            background-position: center;
+            background-attachment: fixed;
+            background-size: cover;
+            font-family: "samin" , sans-serif;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* height: 100vh; */
+        }
+
+        form.singin{
+
+            font-family: "samin" , sans-serif;
+            background: hsla(240, 100%, 9%, 0.61);
+            padding: 2rem;
+            padding-right: 3rem;
+            padding-left: 3rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 7px black;
+            max-width: 400px;
+        }
+
+        label{
+
+            display: block;
+            color: rgb(255, 255, 255);
+            text-shadow: -1px 1px 2px black;
+            margin-bottom: 0.8 rem;
+            font-weight: bold;
+            direction: rtl;
+
+        }
+
+        input.inp{
+
+            border: none;
+            border-radius: 3px;
+            background: rgba(150, 208, 255, 0.3);
+            box-shadow: -1px 2px 5px rgb(2, 22, 59);
+            color: rgb(255, 255, 255);
+            direction: rtl;
+
+
+            height: 1.8rem;
+            width: 10rem;
+            padding: 0.6rem;
+            margin-bottom: 1rem;
+            
+
+        }
+
+        input.inp::placeholder{
+            font-family: "samin" , sans-serif;
+            font-size: 0.6rem;
+            color: rgba(7, 7, 155, 0.425);
+            font-weight: bold;
+        }
+
+        input:focus{
+            outline: none;
+        }
+
+        .btn{
+
+            font-family: "samin", sans-serif;
+            border: none;
+            border-radius: 3px;
+            background: rgb(162, 188, 236);
+            color: rgba(0, 0, 134, 0.616);
+            box-shadow: 0px 1.5px 2px black;
+            font-weight: bold;
+
+
+            width: 10rem;
+            height: 2rem;
+            margin-top: 1rem;
+
+
+        }
+
+        .btn:hover{
+
+        background: rgb(97, 147, 238);
+        }
+
+
+        p.fotter{
+            margin-top: 1.6rem;
+            font-size: 11;
+            color: rgb(94, 96, 255);
+            text-shadow: 0px 1px 2px black;
+        }
+
+    </style>
+</head>
+<body>
+    <form class="singin"> 
+
+        <label>نام‌کاربری</label>
+        <input name="username" class="inp" type="text" placeholder="نام کاربری خود را وارد کنید" required>
+        <br>
+        <label>رمزعبور</label>
+        <input name="password" class="inp" type="password" placeholder="رمزعبور خود را وارد کنید" required>
+        <br>
+        <button class="btn" type="button" onclick="CheckUser(this.parentElement)">ورود</button>
+
+        <br>
+        <p class="fotter">حساب کاربری ندارید؟ <a id="singup">ثبت‌نام کنید</a></p>
+        
+    </form>
+</body>
+
+<script>
+
+const host = "http://127.0.0.1:5000";
+
+(() => { document.querySelector("a#singup").href = host+"/SingUp" })()
+
+function CheckUser(form){
+    const username = form.elements["username"].value;
+    const password = form.elements["password"].value;
+  
+    if (username && password){
+    fetch(host+"/SingInCHeck",{
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json',},
+    body: JSON.stringify([username,password]) })
+    .then(response => {
+        if (response.ok)
+
+        return response.json();
+
+        else
+        return "ERooooR"  })  
+
+    .then(response => {
+        
+        if (response[0] == "nodata")
+        alert("مشکلی پیش آمده!");
+
+        else if (response[0] == "nouser")
+        alert("نام کاربری یا رمز عبور اشتباه است!");
+        
+        else if (response[0] == "databaseerror")
+        alert("مشکلی در ارتباط با دیتابیس وجود دارد.")
+
+        else{
+            document.cookie = "username="+username+"; path=/";
+            document.cookie = "data="+JSON.stringify(response)+"; path=/";
+            window.location = host;
+        }
+        
+        })  
+    .catch(er => {
+            alert("Fetch Error");
+        });
+    }else
+    alert("لطفا تمام فیلد هارا پر کنید.");
+    
+}
+
+
+</script>
+</html>
+
