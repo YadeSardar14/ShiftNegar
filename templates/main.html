@@ -389,15 +389,15 @@
         <label class="title">درخواست شیفت</label>
         <div class="form_col">
         <label>شیفت صبح</label>
-        <input type="checkbox">
+        <input class="ch" id="M" type="checkbox">
         </div>
         <div class="form_col">
         <label>شیفت عصر</label>
-        <input type="checkbox">
+        <input id="E" class="ch" type="checkbox">
         </div>
         <div class="form_col">
         <label>شیفت شب</label>
-        <input type="checkbox">
+        <input id="N" class="ch" type="checkbox">
         </div>
         <input class="req_text" type="text" placeholder="اگر شرحی دارید اینجا بنویسید.">
         <button class="btn" type="button" onclick="AddRequest()">تایید</button>
@@ -416,7 +416,8 @@ var isAdmin;
 var AllShifts = null;
 var MyShifts = [];
 var AllHourWorks = null;
-var MyHourWork
+var MyHourWork;
+var RequestData;
 
 (()=> {
     let data = GetCookie("data");
@@ -490,13 +491,123 @@ function SetShifts(data){
 }
 
 
+
+var lastSiftsState;
+function AddRequest(){
+
+const form = document.querySelector("form.request_popup");
+form.style.display = "none";
+
+const commit = form.querySelector("input.req_text").value
+
+if (RequestData){
+
+
+    let newState = [];
+    form.querySelectorAll("input.ch").forEach(ch=>newState.push(ch.checked));
+    
+    if(newState == lastSiftsState){
+        RequestData = null;
+        lastSiftsState = null;
+        return;    }
+
+
+    let types = [];
+    let type = null;
+    let requests = [];
+    lastSiftsState.forEach((last,i)=>{
+
+        if(last && !newState[i])
+        types.push("off");
+        else if( !last && newState[i])
+        types.push("get");
+
+    });
+
+    if (!(newState.includes(true)) && types.includes("off"))
+    type ="off";
+    else if(types.includes("off") && types.includes("get"))
+    type ="change";
+    else if(types.includes("off"))
+    type = "remove";
+    else if(types.includes("get"))
+    type = "get";
+
+    
+    //Set Requests
+
+    if (type == "off")
+    requests.push([type,UserID,RequestData[1],RequestData[2],commit]);
+    else if (type == "change"){
+        
+    let s1 = null,s2 = null;
+    lastSiftsState.forEach((last,i)=>{
+    if(last && !newState[i]){
+    if (s1)
+    requests.push(["remove",UserID,RequestData[1],RequestData[2],commit,i+1]);
+    else
+    s1 = i+1;}
+    else if( !last && newState[i]){
+    if (s2)
+    requests.push(["get",UserID,RequestData[1],RequestData[2],commit,i+1]);
+    else
+    s2 = i+1;}
+
+    });
+    requests.push(["change",UserID,RequestData[1],RequestData[2],commit,s1,s2]);    }
+   
+    else if (type == "get"){
+
+    lastSiftsState.forEach((last,i)=>{
+    if( !last && newState[i])
+    requests.push(["get",UserID,RequestData[1],RequestData[2],commit,i+1]);
+    });     }
+
+    else if (type == "remove"){
+
+    lastSiftsState.forEach((last,i)=>{
+    if(last && !newState[i])
+    requests.push(["remove",UserID,RequestData[1],RequestData[2],commit,i+1]);
+    });     }
+
+
+    console.log(requests);
+    RequestData = null;
+    lastSiftsState = null;
+}
+
+}
+
+
 function requesthandler(state,day){
 
 const DepartmentsID = document.querySelector("select.dep").value;
-const data =[UserID,DepartmentsID,day.id];
+RequestData =[UserID,DepartmentsID,day.id];
 
 const form = document.querySelector("form.request_popup");
 form.style.display = "flex";
+
+form.querySelector("input.req_text").value ="";
+
+let dayShifts = [];
+
+    form.querySelectorAll("input.ch").forEach(ch=>{
+        ch.checked = false;
+        if(state.textContent.includes(ch.id))
+        ch.checked = true;
+        
+        dayShifts.push(ch.checked)
+    })
+
+
+    lastSiftsState = dayShifts;
+
+document.addEventListener("click",(event)=>{
+
+if(!(form.contains(event.target) || event.target.tagName == "TD"))
+form.style.display = "none";
+
+});
 
 }
 
@@ -529,13 +640,13 @@ if (my_tbody){
     let headers = my_table.querySelectorAll("thead th")
     tr.forEach((td,i) => {
         if (headers[i].className=="day"){
-        td.addEventListener("click",()=>{requesthandler(td.textContent,headers[i])});
+        td.addEventListener("click",()=>{requesthandler(td,headers[i])});
         td.style.backgroundColor = "rgba(131, 255, 193, 0.849)";
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); })
         td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); })
     }
 
-    })
+    });
 }
 
 
