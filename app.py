@@ -270,6 +270,29 @@ def getdata(key):
     elif key == "GetHourWorkState":
         data = GetHourWorkState()
 
+
+    elif key == "GetRequestsForAdmin":
+        with sql.connect(**DBconfig) as con:
+            cursor = con.cursor()
+            cursor.execute("""
+SELECT 
+    requests.type,
+    requests.status AS shift,
+    requests.day,
+    requests.DepartmentsID,
+    requests.commit,
+    requestlog.status,
+    personnel.name
+FROM
+    requests
+        JOIN
+    requestlog ON requests.RequestID = requestlog.RequestID
+        JOIN
+    personnel ON requests.PersonnelID = personnel.PersonnelID;  """)
+            
+            data = cursor.fetchall()
+            cursor.close()
+
     
     return data,200
 
@@ -288,6 +311,11 @@ def singup():
 @app.route("/")
 def main():
     return render_template("main.html")
+
+
+@app.route("/Admin")
+def admin():
+    return render_template("admin.html")
 
 
 
