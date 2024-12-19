@@ -28,6 +28,8 @@
             background-size: cover;
             font-family: "samin" , sans-serif;
             direction: rtl;
+    
+            
         }
         table{
 
@@ -48,7 +50,8 @@
             background-color: rgba(140, 255, 255, 0.699);
             color: rgba(60, 54, 128, 0.685);
             font-weight: 600;
-
+            direction: ltr;
+            border-radius: 2px;
         }
 
         td:nth-child(even){
@@ -82,6 +85,20 @@
     cursor: pointer;
 
         }
+
+
+        .vis{
+    
+            opacity: 1;
+        }
+
+        .hidefect{
+            transition:opacity 7s ease;
+            opacity: 0;
+        }
+
+        .hide{ opacity: 0;
+        background-color: aqua;}
 
         button.btn{
 
@@ -313,6 +330,43 @@
             color: #4827ff7c;}
 
 
+        div.savealert{
+
+            display: flex;
+            justify-content: center;
+
+        }
+
+        p.savealert{
+
+            background-color: rgba(18, 158, 0, 0.521);
+            color: #ffffffb9;
+            border-radius: 10px;
+
+            display: flex;
+            justify-content: right;
+            align-items: center;
+            width: fit-content;
+            padding: 0.4rem;
+            padding-right: 1rem;
+            padding-left: 1rem;
+            position: fixed;
+            bottom: 3rem;
+            
+            
+        }
+
+        table.myrequests td{
+            padding-left: 1rem; padding-right: 1rem;
+            max-width: 4rem; 
+            height: auto;
+            word-wrap: break-word;
+            white-space: normal;
+            overflow: hidden;
+
+        }
+
+
     </style>
 </head>
 <body>
@@ -326,9 +380,18 @@
         </div>
 
 
-    <div class="c2">
+    <div class="c2" id="main_select">
         <p class="dep">برنامه پرسنل بخش</p>
         <select class="dep" onchange="SetTable();">
+        </select>
+    </div>
+
+    
+    <div class="c2" id="req_select">
+        <p class="dep">درخواست های</p>
+        <select class="dep" onchange="SetTableRequests(this.value);">
+            <option value="current">جاری</option>
+            <option value="checked">بررسی شده</option>
         </select>
     </div>
         
@@ -339,7 +402,7 @@
 
     <div class="btn" id="main_btn">
     <button class="btn" onclick="showMyShifts()">شیفت های من</button>
-    <button class="btn">درخواست ها</button>
+    <button class="btn" onclick="showreq()">درخواست ها</button>
     </div>
 
     <div class="btn" id="back_btn">
@@ -384,6 +447,21 @@
         </tbody>
     </table>
 
+    
+    <table class="myrequests">
+        <thead>
+            <tr>
+            <th>درخواست</th>
+            <th>شیفت</th>
+            <th>روز</th>
+            <th>بخش</th>
+            <th class="commit">توضیحات</th>
+            <th>وضعیت</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
 
     <form class="request_popup">
         <label class="title">درخواست شیفت</label>
@@ -401,9 +479,12 @@
         </div>
         <input class="req_text" type="text" placeholder="اگر شرحی دارید اینجا بنویسید.">
         <button class="btn" type="button" onclick="AddRequest()">تایید</button>
-       
-
+    
     </form>
+
+<div class="savealert"> <p class="savealert">درخواست شما با موفقیت ارسال شد.</p> </div>
+
+
 </body>
 
 <script>
@@ -418,6 +499,8 @@ var MyShifts = [];
 var AllHourWorks = null;
 var MyHourWork;
 var RequestData;
+var Shifts = {};
+var Departments = {};
 
 (()=> {
     let data = GetCookie("data");
@@ -431,9 +514,12 @@ var RequestData;
         isAdmin = Boolean(data[0]);
         document.querySelector("p.user").innerHTML = name;
 
+        document.querySelector("div.savealert").classList.add("hide");
                 
+        document.querySelector("div.info div#req_select").style.display = "none"
         document.querySelector("form.request_popup").style.display = "none";
         document.querySelector("table.myshifts").style.display = "none";
+        document.querySelector("table.myrequests").style.display = "none";
         document.querySelector("div#back_btn").style.display = "none";
         SetMainPage();
     }
@@ -450,6 +536,15 @@ function GetCookie(key){
 }
 
 
+function showAlert(event){
+    event.classList.remove("hidefect")
+    event.classList.remove("hide")
+    void event.offsetWidth;
+    event.classList.add("vis");
+    event.classList.add("hidefect");
+}
+
+
 function AddRow(table,data){
 
     const newRow = document.createElement("tr");
@@ -457,6 +552,8 @@ function AddRow(table,data){
     data.forEach(cell => {
         const td = document.createElement("td");
         td.textContent = cell;
+        if (cell == "رد شده") td.style.backgroundColor = "rgba(255, 140, 140, 0.699)";
+        else if (cell == "تایید شده") td.style.backgroundColor = "rgba(103, 255, 154, 0.699)";
         newRow.appendChild(td);
     })
 
@@ -469,6 +566,8 @@ function SetDepartments(data){
 
     let dep = document.querySelector("select.dep");
     data.forEach(ob => {
+        Departments[ob["DepartmentsID"]] =  ob["name"];
+
         let op = document.createElement("option");
         op.innerHTML = ob["name"];
         op.value = ob["DepartmentsID"];
@@ -479,8 +578,10 @@ function SetDepartments(data){
 
 
 function SetShifts(data){
+   
     const shifts = document.querySelector("div#shifts");
     data.forEach(shift => {
+        Shifts[shift["ShiftsID"]] = shift["type"];
 
         let p = document.createElement("p");
         p.innerHTML =shift["type"]+ " : " + shift["startTime"]+ " to " +shift["endTime"] ;
@@ -506,7 +607,7 @@ if (RequestData){
     let newState = [];
     form.querySelectorAll("input.ch").forEach(ch=>newState.push(ch.checked));
     
-    if(newState == lastSiftsState){
+    if(JSON.stringify(newState) == JSON.stringify(lastSiftsState)){
         RequestData = null;
         lastSiftsState = null;
         return;    }
@@ -537,52 +638,78 @@ if (RequestData){
     //Set Requests
 
     if (type == "off")
-    requests.push([type,UserID,RequestData[1],RequestData[2],commit]);
+    requests.push({"type" : type,"UserID" : UserID,"DepartmentsID" : RequestData[0], "day" : RequestData[1], "commit" : commit ,"status" : []});
+   
     else if (type == "change"){
         
     let s1 = null,s2 = null;
     lastSiftsState.forEach((last,i)=>{
     if(last && !newState[i]){
     if (s1)
-    requests.push(["remove",UserID,RequestData[1],RequestData[2],commit,i+1]);
+    requests.push({"type": "remove" ,"UserID" : UserID,"DepartmentsID" : RequestData[0], "day" : RequestData[1], "commit" : commit ,"status" : [i+1]});
     else
     s1 = i+1;}
     else if( !last && newState[i]){
     if (s2)
-    requests.push(["get",UserID,RequestData[1],RequestData[2],commit,i+1]);
+    requests.push({"type" : "get" ,"UserID" : UserID,"DepartmentsID" : RequestData[0], "day" : RequestData[1], "commit" : commit ,"status" : [i+1]});
     else
     s2 = i+1;}
 
     });
-    requests.push(["change",UserID,RequestData[1],RequestData[2],commit,s1,s2]);    }
+    requests.push({"type" : "change","UserID" : UserID,"DepartmentsID" : RequestData[0], "day" : RequestData[1], "commit" : commit ,"status" : [s1,s2]});
+    
    
-    else if (type == "get"){
+    }else if (type == "get"){
 
     lastSiftsState.forEach((last,i)=>{
     if( !last && newState[i])
-    requests.push(["get",UserID,RequestData[1],RequestData[2],commit,i+1]);
+    requests.push({"type" : "get" ,"UserID" : UserID,"DepartmentsID" : RequestData[0], "day" : RequestData[1], "commit" : commit ,"status" : [i+1]});
     });     }
 
     else if (type == "remove"){
 
     lastSiftsState.forEach((last,i)=>{
     if(last && !newState[i])
-    requests.push(["remove",UserID,RequestData[1],RequestData[2],commit,i+1]);
+    requests.push({"type": "remove" ,"UserID" : UserID,"DepartmentsID" : RequestData[0], "day" : RequestData[1], "commit" : commit ,"status" : [i+1]});
     });     }
 
 
-    console.log(requests);
+    SaveRequest(requests);
+    SetTableRequests();
+    setTimeout(SetTableRequests,1000);
+
     RequestData = null;
     lastSiftsState = null;
 }
 
 }
 
+function SaveRequest(data){
+
+    fetch(host+"/SaveRequest",{
+        method: "POST",
+        headers:{
+            'Content-Type': 'application/json',},
+        body : JSON.stringify(data)
+    })
+    .then(response=>{
+        if(response.ok)
+            showAlert(document.querySelector("div.savealert"));
+        else
+        console.log("Save Request ERooooR");  }) 
+        
+    .catch(er => {
+        console.log("Fetch Error");
+    });
+
+}
+
+
 
 function requesthandler(state,day){
 
 const DepartmentsID = document.querySelector("select.dep").value;
-RequestData =[UserID,DepartmentsID,day.id];
+RequestData =[DepartmentsID,day.id];
 
 const form = document.querySelector("form.request_popup");
 form.style.display = "flex";
@@ -648,6 +775,62 @@ if (my_tbody){
 
     });
 }
+
+
+}
+
+
+function SetTableRequests(st = "current"){
+
+
+  
+const my_table = document.querySelector("table."+"myrequests");
+let my_tbody = my_table.querySelector("tbody");
+my_tbody.remove();
+my_tbody = document.createElement("tbody");
+my_table.appendChild(my_tbody);
+    
+fetch(host+"/GetRequests",{
+method: 'POST',
+headers: { 'Content-Type': 'application/json',},
+body: JSON.stringify([UserID])})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+    if (response[0]){
+        console.log(st)
+    for(req of response){
+
+        if (st == "current" && req[5]!= "current")
+        continue;
+        else if (st == "checked" && req[5] == "current")
+        continue;
+
+        let status = JSON.parse(req[1]);
+        let row = [
+                (req[0]=="get")?"افزودن":(req[0]=="remove")?"حذف":(req[0]=="change")?"تغیر":(req[0]=="off")?"مرخصی":"",
+                (req[0]=="get")?Shifts[status[0]]:(req[0]=="remove")?Shifts[status[0]]:(req[0]=="change")?Shifts[status[0]]+" ⭢ "+Shifts[status[1]]:"",
+                (req[2]==="0")?"شنبه":(req[2]==="1")?"یکشنبه":(req[2]==="2")?"دوشنبه":(req[2]==="3")?"سه‌شنبه":(req[2]==="4")?"چهارشنبه":(req[2]==="5")?"پنجشنبه":(req[2]==="6")?"جمعه":"",
+                Departments[req[3]],
+                req[4],
+                (req[5] == "current")?"جاری":(req[5] == "reject")?"رد شده":(req[5] == "accept")?"تایید شده":""
+            ];
+
+        AddRow(my_tbody,row);
+    }
+
+    }else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
 
 
 }
@@ -814,7 +997,7 @@ headers: { 'Content-Type': 'application/json',}})
         console.log("Fetch Error");
     });
 
-
+SetTableRequests();
 SetTable();
 setTimeout(SetTable,1000);
 
@@ -843,6 +1026,20 @@ document.querySelector("div#back_btn").style.display = "flex";
 
 }
 
+
+function showreq(){
+
+    document.querySelector("table.main").style.display = "none";
+    document.querySelector("table.myrequests").style.display = "table";
+
+    document.querySelector("div#main_btn").style.display = "none";
+    document.querySelector("div#back_btn").style.display = "flex";
+       
+    document.querySelector("div.info div#main_select").style.display = "none"
+    document.querySelector("div.info div#req_select").style.display = "flex"
+       
+
+}
 function back(){
 
 document.querySelector("p.dep").innerHTML="برنامه پرسنل بخش";
@@ -852,7 +1049,12 @@ document.querySelector("div#back_btn").style.display = "none";
 
 document.querySelector("table.main").style.display = "table";
 document.querySelector("table.myshifts").style.display = "none";
+document.querySelector("table.myrequests").style.display = "none";
 
+document.querySelector("div.info div#main_select").style.display = "flex"
+document.querySelector("div.info div#req_select").style.display = "none"
+       
+       
 }
 
 </script>

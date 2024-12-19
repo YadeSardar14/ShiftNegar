@@ -177,7 +177,7 @@ def saveuser():
         with sql.connect(**DBconfig) as con:
             cursor = con.cursor()
             params = (data.get("name"),data.get("contractType"),workinghours,PositionsID,data.get("username"),data.get("password"))
-            cursor.execute("INSERT INTO datashift.personnel (name, contractType, workinghours, positionID, isAdmin, username, password) VALUES (%s,%s,%s,%s,0,%s,%s);",params)
+            cursor.execute("INSERT INTO personnel (name, contractType, workinghours, positionID, isAdmin, username, password) VALUES (%s,%s,%s,%s,0,%s,%s);",params)
             con.commit()
             cursor.close()
 
@@ -189,7 +189,52 @@ def saveuser():
     return ["ok"], 200
 
 
-#personnel.username_UNIQUE
+
+@app.route("/SaveRequest",methods= ["POST"])
+def saverequest():
+    data = request.get_json()
+
+    if not CURRENT_WEEKDATE : return ["nodate"],200
+
+    with sql.connect(**DBconfig) as con:
+
+        for req in  data:
+            cursor = con.cursor()
+            params = (req["UserID"],req["DepartmentsID"],req["type"],req["day"],req["commit"],str(req["status"]),CURRENT_WEEKDATE[int(req["day"])],)
+            cursor.execute("INSERT INTO requests (PersonnelID, DepartmentsID, type, day, commit, status, date) VALUES (%s,%s,%s,%s,%s,%s,%s);",params)
+            con.commit()
+            cursor.close()
+       
+        return [],200
+
+
+
+@app.route("/GetRequests",methods= ["POST"])
+def getrequests():
+    user = request.get_json()[0]
+    with sql.connect(**DBconfig) as con:
+        cursor = con.cursor()
+        cursor.execute("""
+SELECT 
+    requests.type,
+    requests.status AS shift,
+    requests.day,
+    requests.DepartmentsID,
+    requests.commit,
+    requestlog.status
+FROM
+    requests
+        JOIN
+    requestlog ON requests.RequestID = requestlog.RequestID
+WHERE
+    requests.PersonnelID = %s;  """,(user,))
+            
+        data = cursor.fetchall()
+        cursor.close()
+    
+    return data,200
+
+
 
 @app.route("/GetData/<key>",methods= ["GET"])
 def getdata(key):
@@ -206,7 +251,6 @@ def getdata(key):
             cursor.execute("SELECT  * FROM departments;")
             data = cursor.fetchall()
             cursor.close()
-
     elif key == "GetShifts":
         with sql.connect(**DBconfig) as con:
             cursor = con.cursor(dictionary=True)
@@ -225,7 +269,7 @@ def getdata(key):
     
     elif key == "GetHourWorkState":
         data = GetHourWorkState()
-    
+
     
     return data,200
 
