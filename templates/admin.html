@@ -57,6 +57,7 @@
         td:nth-child(even){
 
             background-color: rgba(203, 253, 255, 0.664);
+    
         }
 
         th{
@@ -80,7 +81,7 @@
 
     .tdhoverefect{
     background: rgba(123, 255, 255, 0.849);
-    outline: dashed;
+    outline: double;
     outline-color: rgb(111, 126, 255);
     cursor: pointer;
 
@@ -412,7 +413,7 @@
     <table class="main">
         <thead>
             <tr>
-            <th>نام و نام‌خانوادگی</th>
+            <th class="name">نام و نام‌خانوادگی</th>
             <th>ساعت کاری</th>
             <th>اضافه کار</th>
             <th class="day">شنبه</th>
@@ -437,7 +438,7 @@
             <th>روز</th>
             <th>بخش</th>
             <th class="commit">توضیحات</th>
-            <th>وضعیت</th>
+            <th class="status">وضعیت</th>
             </tr>
         </thead>
         <tbody>
@@ -505,8 +506,6 @@ function AddRow(table,data){
     data.forEach(cell => {
         const td = document.createElement("td");
         td.textContent = cell;
-        if (cell == "رد شده") td.style.backgroundColor = "rgba(255, 140, 140, 0.699)";
-        else if (cell == "تایید شده") td.style.backgroundColor = "rgba(103, 255, 154, 0.699)";
         newRow.appendChild(td);
     })
 
@@ -545,6 +544,48 @@ function SetShifts(data){
 }
 
 
+
+
+
+
+function adminRequestHandler(){}
+
+
+
+function adminShiftHandler(){}
+
+
+
+
+function adminUserHandler(){}
+
+
+
+
+
+function SetRequestTableEvent(table) {
+    
+let tds = table.querySelectorAll("td");
+let headers = table.querySelectorAll("thead th");
+
+let i = 0;
+tds.forEach((td) => {
+    if(i==headers.length) i=0;
+        if (headers[i].className=="status"){
+        td.addEventListener("click",()=>{adminRequestHandler();});
+        td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
+        td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); });
+
+
+        if(td.textContent == "رد شده") td.style.backgroundColor = "rgba(255, 140, 140, 0.699)";
+        else if (td.textContent == "تایید شده") td.style.backgroundColor = "rgba(103, 255, 154, 0.699)";
+        else td.style.backgroundColor = "rgba(139, 160, 255, 0.705)";
+        }
+
+    i++;
+    });
+
+}
 
 function SetTableRequests(st = "current"){
 
@@ -587,14 +628,42 @@ headers: { 'Content-Type': 'application/json',}})
             ];
 
         AddRow(my_tbody,row);
-    }}})  
+    }
+    SetRequestTableEvent(my_table);
+    }})  
 .catch(er => {
         console.log("Fetch Error");
     });
-
-
 }
 
+
+function SetTableEvent(table) {
+
+    
+let tds = table.querySelectorAll("td");
+let headers = table.querySelectorAll("thead th");
+
+let i = 0;
+tds.forEach((td) => {
+    if(i==headers.length) i=0;
+
+        if (headers[i].className=="day"){
+        td.addEventListener("click",()=>{adminShiftHandler();});
+        td.style.backgroundColor = "rgba(131, 255, 193, 0.849)";
+        td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
+        td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); });
+        
+        }else if (headers[i].className=="name"){
+        td.addEventListener("click",()=>{adminUserHandler();});
+        td.style.backgroundColor = "rgba(131, 200, 193, 0.849)";
+        td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
+        td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); });
+        }
+
+    i++;
+    });
+    
+}
 
 
 function SetTable(){
@@ -620,7 +689,8 @@ if (AllShifts){
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))));
     });
     
-    
+    SetTableEvent(table);
+
 }else{
 
 fetch(host+"/GetData/GetTable",{
@@ -649,6 +719,8 @@ headers: { 'Content-Type': 'application/json',}})
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))));
     });
 
+    SetTableEvent(table);
+
     }else
     console.log("Data Error . . . !");
     
@@ -657,8 +729,7 @@ headers: { 'Content-Type': 'application/json',}})
         console.log("Fetch Error");
     });
 
-}
-}
+}}
 
 
 
