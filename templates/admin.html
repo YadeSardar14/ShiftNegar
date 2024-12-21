@@ -80,8 +80,8 @@
 
 
     .tdhoverefect{
-    background: rgba(123, 255, 255, 0.849);
-    outline: double;
+    background: rgba(13, 218, 218, 0.849);
+    outline: solid;
     outline-color: rgb(111, 126, 255);
     cursor: pointer;
 
@@ -263,10 +263,10 @@
             outline-color: rgba(3, 42, 150, 0.63);
             outline-style: dashed;
         }
-        
 
 
-        form.request_popup{
+
+        form#popup{
 
             
             background-color: rgba(34, 13, 129, 0.705);
@@ -286,7 +286,7 @@
             
         }
 
-        form.request_popup input{
+        form#popup input{
 
             margin-right: 0.7rem;
             
@@ -297,7 +297,7 @@
             margin-bottom: 1rem;
         }
 
-        form.request_popup button{
+        form#popup button{
 
             margin-top: 1rem;
             width: 90%;
@@ -306,6 +306,7 @@
             font-size: 15;
         }
 
+        
         form input.req_text{
 
             font-family: "samin", sans-serif;
@@ -319,7 +320,7 @@
             font-weight: bold;
             box-shadow: -1px 2px 5px rgba(2, 22, 59, 0.486);
 
-
+            
             height: 1.5rem;
             width: auto;
             margin-top: 0.8rem;
@@ -329,6 +330,7 @@
         form input.req_text::placeholder{
             font-weight: bolder;
             color: #4827ff7c;}
+
 
 
         div.savealert{
@@ -416,13 +418,13 @@
             <th class="name">نام و نام‌خانوادگی</th>
             <th>ساعت کاری</th>
             <th>اضافه کار</th>
-            <th class="day">شنبه</th>
-            <th class="day">یکشنبه</th>
-            <th class="day">دوشنبه</th>
-            <th class="day">سه‌شنبه</th>
-            <th class="day">چهارشنبه</th>
-            <th class="day">پنج‌شنبه</th>
-            <th class="day">جمعه</th>
+            <th class="day" id="0">شنبه</th>
+            <th class="day" id="1">یکشنبه</th>
+            <th class="day" id="2">دوشنبه</th>
+            <th class="day" id="3">سه‌شنبه</th>
+            <th class="day" id="4">چهارشنبه</th>
+            <th class="day" id="5">پنج‌شنبه</th>
+            <th class="day" id="6">جمعه</th>
             </tr>
         </thead>
         <tbody>
@@ -445,6 +447,35 @@
         </tbody>
     </table>
 
+
+    
+    <form class="adminshifthandel" id="popup">
+        <label for="user" class="user" id=""></label>
+
+        <label class="title">تعیین شیفت</label>
+        <div class="form_col">
+        <label>شیفت صبح</label>
+        <input class="ch" id="1" type="checkbox">
+        </div>
+        <div class="form_col">
+        <label>شیفت عصر</label>
+        <input id="2" class="ch" type="checkbox">
+        </div>
+        <div class="form_col">
+        <label>شیفت شب</label>
+        <input id="3" class="ch" type="checkbox">
+        </div>
+        <button class="btn" type="button" onclick="SaveNewShift()">ثبت</button>
+    
+    </form>
+
+
+    <form class="adminuserhandel" id="popup" onclick="this.innerHTML = '';
+    this.style.display ='none'"></form>
+
+
+
+    
 </body>
 
 <script>
@@ -459,6 +490,7 @@ var AllHourWorks = null;
 var RequestData;
 var Shifts = {};
 var Departments = {};
+var Persennols = [];
 
 (()=> {
     let data = GetCookie("data");
@@ -472,6 +504,9 @@ var Departments = {};
         isAdmin = Boolean(data[0]);
         document.querySelector("p.user").innerHTML = name;
      
+        document.querySelector("form.adminshifthandel").style.display = "none";
+        document.querySelector("form.adminuserhandel").style.display = "none";
+
         document.querySelector("div.info div#req_select").style.display = "none"
         document.querySelector("table.myrequests").style.display = "none";
         document.querySelector("div#back_btn").style.display = "none";
@@ -499,15 +534,20 @@ function showAlert(event){
 }
 
 
-function AddRow(table,data){
+function AddRow(table,data,username = null){
 
     const newRow = document.createElement("tr");
+    const headers = table.parentElement.querySelectorAll("thead th");
+    const dep_id = document.querySelector("select.dep")
 
-    data.forEach(cell => {
+    data.forEach((cell,i) => {
         const td = document.createElement("td");
         td.textContent = cell;
+        if(cell==="OFF") td.style.color = "rgba(255, 20, 0, 0.56)";
+
+        if (username) td.id = JSON.stringify({"username" : username , "day" : headers[i].id, "selectValue" : dep_id.value});
         newRow.appendChild(td);
-    })
+    });
 
     table.appendChild(newRow);
 
@@ -535,10 +575,11 @@ function SetShifts(data){
     data.forEach(shift => {
         Shifts[shift["ShiftsID"]] = shift["type"];
 
+        if(shift["ShiftsID"] !== 0){
         let p = document.createElement("p");
         p.innerHTML =shift["type"]+ " : " + shift["startTime"]+ " to " +shift["endTime"] ;
         p.value = shift["ShiftsID"];
-        shifts.appendChild(p);
+        shifts.appendChild(p);  }
     })
 
 }
@@ -551,15 +592,135 @@ function SetShifts(data){
 function adminRequestHandler(){}
 
 
+var lastshiftstate = [];
+function adminShiftHandler(td,day){
 
-function adminShiftHandler(){}
+    const form = document.querySelector("form.adminshifthandel");
+    form.querySelector("label.user").id = td.id;
+    
+    form.querySelectorAll("input.ch").forEach(ch=>{
+        ch.checked = false;
+        if(td.innerHTML.includes(Shifts[ch.id])) ch.checked = true;
+
+        lastshiftstate.push(ch.checked);
+    });
+    
+    form.style.display = "flex";
+}
+
+function SaveNewShift(){
+    
+    const form = document.querySelector("form.adminshifthandel");
+    const user = form.querySelector("label.user");
+
+    let newState = [];
+    form.querySelectorAll("input.ch").forEach(ch=>newState.push(ch.checked));
+    
+    if(JSON.stringify(newState) == JSON.stringify(lastshiftstate)){
+        lastshiftstate = [];
+        form.style.display = "none";
+        user.id = null;
+        return;    }
+
+    
+    let shiftIDs = [];
+    form.querySelectorAll("input.ch").forEach(ch=>{    
+        if(ch.checked)
+        shiftIDs.push(ch.id);
+    });
+
+    if (!(newState.includes(true))) shiftIDs = [0];
+
+
+    if(user.id){
+
+fetch(host+"/SaveShift",{
+    method : "POST",
+    headers: { 'Content-Type': 'application/json',},
+    body : JSON.stringify([JSON.parse(user.id),shiftIDs])
+})
+.then(response => {
+    if (response.ok)
+    return response.json();
+    else
+    console.error("save Conn Ereor");
+    
+})
+.catch(er=>{
+    console.error("Save Fetch Ereor");
+})
+
+    }
+
+    lastshiftstate = [];
+    form.style.display = "none";
+    user.id = null;
+
+    
+    setTimeout(()=>{SetTable(reLoade=true); 
+                    SetWorkHours();
+    },500);
+
+}
 
 
 
 
-function adminUserHandler(){}
+function adminUserHandler(td){
+
+    const form = document.querySelector("form.adminuserhandel");
+    if (!form.innerHTML){
+    form.style.display = "flex";
+    for (node of JSON.parse(AllShifts)){ 
+        if (JSON.parse(td.id)["username"] == node.pop()){
+        form.innerHTML += "<h style='padding-bottom: 0.5rem;'>"+node[0]+"</h>"+"<p> سمت : "+node[1]+"</p>"+"<p> قرارداد : "+node[2]+"</p>";
+        break;}
+    }
+
+    }else{
+        
+        form.innerHTML = "";
+        form.style.display ="none"
+
+    }
+    
+}
 
 
+
+
+function SetPersonnels(tbody){
+
+fetch(host+"/GetData/GetPersonnels",{
+    method: 'GET',
+headers: { 'Content-Type': 'application/json',}})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+    
+
+    if(response){
+
+
+        for (key in response){
+            if (!Persennols.includes(response[key]["username"]))
+            AddRow(tbody,[response[key]["name"],"-","-",null,null,null,null,null,null,null],response[key]["username"])
+            }
+    
+
+    }else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
+}
 
 
 
@@ -648,13 +809,13 @@ tds.forEach((td) => {
     if(i==headers.length) i=0;
 
         if (headers[i].className=="day"){
-        td.addEventListener("click",()=>{adminShiftHandler();});
+        td.addEventListener("click",()=>{adminShiftHandler(td);});
         td.style.backgroundColor = "rgba(131, 255, 193, 0.849)";
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
         td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); });
         
         }else if (headers[i].className=="name"){
-        td.addEventListener("click",()=>{adminUserHandler();});
+        td.addEventListener("click",()=>{adminUserHandler(td);});
         td.style.backgroundColor = "rgba(131, 200, 193, 0.849)";
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
         td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); });
@@ -666,7 +827,7 @@ tds.forEach((td) => {
 }
 
 
-function SetTable(){
+function SetTable(reLoade = false){
 
 const table = document.querySelector("table."+"main");
 let tbody = table.querySelector("tbody");
@@ -674,7 +835,7 @@ tbody.remove();
 tbody = document.createElement("tbody");
 table.appendChild(tbody);
 
-if (AllShifts){
+if (AllShifts && !reLoade){
 
     const dep = document.querySelector("select.dep");
     const all = JSON.parse(AllShifts);
@@ -685,12 +846,16 @@ if (AllShifts){
     all.forEach(row => {
         let username = row.pop(); 
         let user_dep = row.pop(); 
+        
         if (user_dep == dep.value)
-        AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))));
+        AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
+    
+        if (!Persennols.includes(username)) Persennols.push(username);
     });
     
-    SetTableEvent(table);
-
+    SetPersonnels(tbody);
+    setTimeout(()=>{SetTableEvent(table)},500);
+    
 }else{
 
 fetch(host+"/GetData/GetTable",{
@@ -716,10 +881,11 @@ headers: { 'Content-Type': 'application/json',}})
         let user_dep = row.pop(); 
 
         if (user_dep == dep.value)
-        AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))));
+        AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
     });
 
-    SetTableEvent(table);
+    SetPersonnels(tbody);
+    setTimeout(()=>{SetTableEvent(table)},500);
 
     }else
     console.log("Data Error . . . !");
@@ -731,7 +897,32 @@ headers: { 'Content-Type': 'application/json',}})
 
 }}
 
+function SetWorkHours(){
 
+    fetch(host+"/GetData/GetHourWorkState",{
+method: 'GET',
+headers: { 'Content-Type': 'application/json',}})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+    
+    if (response[0])
+    AllHourWorks = response;
+
+    else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
+
+}
 
 function SetMainPage(){
 
@@ -785,28 +976,7 @@ headers: { 'Content-Type': 'application/json',}})
 
 
 
-fetch(host+"/GetData/GetHourWorkState",{
-method: 'GET',
-headers: { 'Content-Type': 'application/json',}})
-.then(response => {
-    if (response.ok)
-    return response.json();
-
-    else
-    return "ERooooR";  })  
-
-.then(response => {
-    
-    if (response[0])
-    AllHourWorks = response;
-
-    else
-    console.log("Data Error . . . !");
-    
-    })  
-.catch(er => {
-        console.log("Fetch Error");
-    });
+SetWorkHours();
 
 SetTableRequests();
 SetTable();

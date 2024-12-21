@@ -587,10 +587,11 @@ function SetShifts(data){
     data.forEach(shift => {
         Shifts[shift["ShiftsID"]] = shift["type"];
 
+        if(shift["ShiftsID"] !== 0){
         let p = document.createElement("p");
         p.innerHTML =shift["type"]+ " : " + shift["startTime"]+ " to " +shift["endTime"] ;
         p.value = shift["ShiftsID"];
-        shifts.appendChild(p);
+        shifts.appendChild(p);  }
     })
 
 }

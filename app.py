@@ -13,6 +13,7 @@ DBconfig = {
 }
 
 CURRENT_WEEKDATE = None
+Personnels = dict()
 
 def GetUser(username,password):
     with sql.connect(**DBconfig) as con:
@@ -43,7 +44,7 @@ def GetWeekShifts(WeekNum):
         cursor.execute("""
         SELECT 
     MAX(shiftassignments.date) - INTERVAL (SELECT 
-            log.day
+            MAX(log.day)
         FROM
             shiftassignments AS log
         WHERE
@@ -105,8 +106,22 @@ GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username;
 
         global CURRENT_WEEKDATE
         CURRENT_WEEKDATE = WeekDate(last_sat_date[0])
-    
+
+
+        with sql.connect(**DBconfig) as con:
+            cursor = con.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM datashift.personnel;")
+            per = cursor.fetchall()
+            cursor.close()
+            for p in per:
+                Personnels.update({p["username"] : p})
+                
+            
+            
+
     return ret
+
+
 
 
 
@@ -236,6 +251,41 @@ WHERE
 
 
 
+
+@app.route("/SaveShift",methods= ["POST"])
+def saveshift():
+    data = request.get_json()
+    shifts = data[1]
+    data = data[0]
+    with sql.connect(**DBconfig) as con:
+            cursor = con.cursor()
+            cursor.execute("SET SQL_SAFE_UPDATES = 0;")
+            params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],)
+            cursor.execute("""
+DELETE log FROM shiftassignments AS log
+WHERE
+    log.date = %s
+    AND log.day = %s
+    AND log.PersonnelID = %s;
+                           """,params)
+            
+            con.commit()
+            cursor.close()
+
+    for sh in shifts:
+        with sql.connect(**DBconfig) as con:
+            cursor = con.cursor()
+            params =  (Personnels[data["username"]]["PersonnelID"],int(sh),data["selectValue"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
+            cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
+                           ,params)
+            
+            con.commit()
+            cursor.close()
+
+    return [],200
+
+
+
 @app.route("/GetData/<key>",methods= ["GET"])
 def getdata(key):
 
@@ -293,6 +343,9 @@ FROM
             data = cursor.fetchall()
             cursor.close()
 
+
+    elif key == "GetPersonnels":
+        data = Personnels
     
     return data,200
 
