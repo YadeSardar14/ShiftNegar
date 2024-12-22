@@ -146,7 +146,7 @@ function CheckUser(form){
     const password = form.elements["password"].value;
   
     if (username && password){
-    fetch(host+"/SingInCHeck",{
+    fetch(host+"/SetData/SingInCHeck",{
     method: 'POST',
     headers: { 'Content-Type': 'application/json',},
     body: JSON.stringify([username,password]) })

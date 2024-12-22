@@ -691,7 +691,7 @@ if (RequestData){
 
 function SaveRequest(data){
 
-    fetch(host+"/SaveRequest",{
+    fetch(host+"/SetData/SaveRequest",{
         method: "POST",
         headers:{
             'Content-Type': 'application/json',},
@@ -710,7 +710,7 @@ function SaveRequest(data){
 }
 
 
-
+var no_clickEvent_r = true;
 function requesthandler(state,day){
 
 const DepartmentsID = document.querySelector("select.dep").value;
@@ -734,12 +734,15 @@ let dayShifts = [];
 
     lastSiftsState = dayShifts;
 
+if(no_clickEvent_r){
 document.addEventListener("click",(event)=>{
 
 if(!(form.contains(event.target) || event.target.tagName == "TD"))
 form.style.display = "none";
 
 });
+
+no_clickEvent_r =false;     }
 
 }
 
