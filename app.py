@@ -106,23 +106,22 @@ GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username;
 
         global CURRENT_WEEKDATE
         CURRENT_WEEKDATE = WeekDate(last_sat_date[0])
-
-
-        with sql.connect(**DBconfig) as con:
-            cursor = con.cursor(dictionary=True)
-            cursor.execute("SELECT * FROM datashift.personnel;")
-            per = cursor.fetchall()
-            cursor.close()
-            for p in per:
-                Personnels.update({p["username"] : p})
-                
             
-            
+        UpdateUsers()
+        
 
     return ret
 
 
-
+def UpdateUsers():
+    
+    with sql.connect(**DBconfig) as con:
+        cursor = con.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM datashift.personnel;")
+        per = cursor.fetchall()
+        cursor.close()
+        for p in per:
+            Personnels.update({p["username"] : p})
 
 
 def GetHourWorkState():
@@ -257,16 +256,18 @@ def saveshift():
     data = request.get_json()
     shifts = data[1]
     data = data[0]
+    
     with sql.connect(**DBconfig) as con:
             cursor = con.cursor()
             cursor.execute("SET SQL_SAFE_UPDATES = 0;")
-            params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],)
+            params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["selectValue"],)
             cursor.execute("""
 DELETE log FROM shiftassignments AS log
 WHERE
     log.date = %s
     AND log.day = %s
-    AND log.PersonnelID = %s;
+    AND log.PersonnelID = %s
+    AND log.DepartmentsID = %s;
                            """,params)
             
             con.commit()
@@ -283,6 +284,24 @@ WHERE
             cursor.close()
 
     return [],200
+
+
+
+
+@app.route("/ChangeAdmin",methods= ["POST"])
+def ChangeAdmin():
+    data = request.get_json()
+    with sql.connect(**DBconfig) as con:
+        cursor = con.cursor()
+        cursor.execute("UPDATE personnel SET isAdmin = %s WHERE (username = %s);",
+                       (not data[0],data[1],))
+        print((not data[0],data[1],))
+        con.commit()
+        cursor.close()
+    
+    return [],200
+
+
 
 
 

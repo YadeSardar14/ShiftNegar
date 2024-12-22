@@ -333,14 +333,14 @@
 
 
 
-        div.savealert{
+        div#alert{
 
             display: flex;
             justify-content: center;
 
         }
 
-        p.savealert{
+        p#alert{
 
             background-color: rgba(18, 158, 0, 0.521);
             color: #ffffffb9;
@@ -475,6 +475,9 @@
 
 
 
+<div class="saveshiftalert" id="alert"> <p id="alert">تغییرات با موفقیت اعمال شد.</p> </div>
+
+
     
 </body>
 
@@ -507,6 +510,8 @@ var Persennols = [];
         document.querySelector("form.adminshifthandel").style.display = "none";
         document.querySelector("form.adminuserhandel").style.display = "none";
 
+        document.querySelector("div.saveshiftalert").classList.add("hide");
+           
         document.querySelector("div.info div#req_select").style.display = "none"
         document.querySelector("table.myrequests").style.display = "none";
         document.querySelector("div#back_btn").style.display = "none";
@@ -545,7 +550,8 @@ function AddRow(table,data,username = null){
         td.textContent = cell;
         if(cell==="OFF") td.style.color = "rgba(255, 20, 0, 0.56)";
 
-        if (username) td.id = JSON.stringify({"username" : username , "day" : headers[i].id, "selectValue" : dep_id.value});
+        if (username) td.id = JSON.stringify({"username" : username , "day" : headers[i].id, "selectValue" : dep_id.value , "isAdmin" : Persennols[username]["isAdmin"]});
+        
         newRow.appendChild(td);
     });
 
@@ -640,15 +646,17 @@ fetch(host+"/SaveShift",{
     body : JSON.stringify([JSON.parse(user.id),shiftIDs])
 })
 .then(response => {
-    if (response.ok)
-    return response.json();
-    else
+    if (response.ok){
+        showAlert(document.querySelector("div.saveshiftalert"));
+        return response.json();
+    
+    }else
     console.error("save Conn Ereor");
     
 })
 .catch(er=>{
     console.error("Save Fetch Ereor");
-})
+});
 
     }
 
@@ -667,15 +675,27 @@ fetch(host+"/SaveShift",{
 
 
 function adminUserHandler(td){
-
+    const data =  JSON.parse(td.id);
     const form = document.querySelector("form.adminuserhandel");
     if (!form.innerHTML){
     form.style.display = "flex";
-    for (node of JSON.parse(AllShifts)){ 
-        if (JSON.parse(td.id)["username"] == node.pop()){
-        form.innerHTML += "<h style='padding-bottom: 0.5rem;'>"+node[0]+"</h>"+"<p> سمت : "+node[1]+"</p>"+"<p> قرارداد : "+node[2]+"</p>";
+    for (let node of JSON.parse(AllShifts)){ 
+        if (data["username"] == node.pop()){
+        form.innerHTML += "<h style='padding-bottom: 0.5rem;'>"+node[0]+"</h>"+"<p> سمت : "+node[1]+"</p>"+"<p> قرارداد : "+(node[2] == "hourly"?"ساعتی":node[2] == "official"? "رسمی" : node[2])+"</p>";
         break;}
     }
+
+    const btn = document.createElement("button");
+    btn.classList.add("btn")
+    btn.addEventListener("click",()=>{adminup(data["isAdmin"],data["username"])} );
+
+    if(data["isAdmin"])
+    btn.innerHTML = "حذف دسترسی به پنل مدیریت";
+    else
+    btn.innerHTML = "اجازه دسترسی به پنل مدیریت"
+    
+    form.appendChild(btn);
+
 
     }else{
         
@@ -685,6 +705,30 @@ function adminUserHandler(td){
     }
     
 }
+
+
+function adminup(isAdmin,username) {
+
+fetch(host+"/ChangeAdmin",{
+    method : "POST",
+    headers: { 'Content-Type': 'application/json',},
+    body : JSON.stringify([isAdmin,username])
+})
+.then(response => {
+    if (response.ok){
+        showAlert(document.querySelector("div.saveshiftalert"));
+        return response.json();
+    
+    }else
+    console.error("save Conn Ereor");
+    
+})
+.catch(er=>{
+    console.error("Save Fetch Ereor");
+})
+
+    }
+    
 
 
 
@@ -706,9 +750,17 @@ headers: { 'Content-Type': 'application/json',}})
 
     if(response){
 
+        let currentUsers = []
 
+        const trs = tbody.querySelectorAll("tr")
+        trs.forEach(tr=>{ 
+            const tdID = tr.querySelector("td").id;
+            currentUsers.push(JSON.parse(tdID)["username"]) })
+        
+        
+        if (!Persennols[0]) Persennols = response;
         for (key in response){
-            if (!Persennols.includes(response[key]["username"]))
+            if (!currentUsers.includes(response[key]["username"]))
             AddRow(tbody,[response[key]["name"],"-","-",null,null,null,null,null,null,null],response[key]["username"])
             }
     
@@ -816,9 +868,14 @@ tds.forEach((td) => {
         
         }else if (headers[i].className=="name"){
         td.addEventListener("click",()=>{adminUserHandler(td);});
-        td.style.backgroundColor = "rgba(131, 200, 193, 0.849)";
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
         td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); });
+        
+        if(JSON.parse(td.id)["isAdmin"])
+        td.style.backgroundColor = "rgba(131, 200, 120, 0.849)";
+        else
+        td.style.backgroundColor = "rgba(131, 200, 193, 0.849)";
+    
         }
 
     i++;
@@ -844,14 +901,15 @@ if (AllShifts && !reLoade){
     AllHourWorks.forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});
    
     all.forEach(row => {
+
+
         let username = row.pop(); 
         let user_dep = row.pop(); 
         
         if (user_dep == dep.value)
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
     
-        if (!Persennols.includes(username)) Persennols.push(username);
-    });
+        });
     
     SetPersonnels(tbody);
     setTimeout(()=>{SetTableEvent(table)},500);
@@ -882,6 +940,7 @@ headers: { 'Content-Type': 'application/json',}})
 
         if (user_dep == dep.value)
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
+
     });
 
     SetPersonnels(tbody);
@@ -967,6 +1026,33 @@ headers: { 'Content-Type': 'application/json',}})
     SetShifts(response);
 
     else
+    console.log("Data Error . . . !");
+    
+    })  
+.catch(er => {
+        console.log("Fetch Error");
+    });
+
+
+
+fetch(host+"/GetData/GetPersonnels",{
+method: 'GET',
+headers: { 'Content-Type': 'application/json',}})
+.then(response => {
+    if (response.ok)
+    return response.json();
+
+    else
+    return "ERooooR";  })  
+
+.then(response => {
+    
+
+    if(response){
+
+        if (!Persennols[0]) Persennols = response;
+
+    }else
     console.log("Data Error . . . !");
     
     })  
