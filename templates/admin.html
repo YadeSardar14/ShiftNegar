@@ -626,7 +626,7 @@ data = {
     "day" : data[3]
 }
     
-fetch(host+"/ChangeRequest",{
+fetch(host+"/SetData/ChangeRequest",{
     method : "POST",
     headers: { 'Content-Type': 'application/json',},
     body : JSON.stringify(data)
@@ -721,7 +721,7 @@ function SaveNewShift(){
 
     if(user.id){
 
-fetch(host+"/SaveShift",{
+fetch(host+"/SetData/SaveShift",{
     method : "POST",
     headers: { 'Content-Type': 'application/json',},
     body : JSON.stringify([JSON.parse(user.id),shiftIDs])
@@ -790,7 +790,7 @@ function adminUserHandler(td){
 
 function adminup(isAdmin,username) {
 
-fetch(host+"/ChangeAdmin",{
+fetch(host+"/SetData/ChangeAdmin",{
     method : "POST",
     headers: { 'Content-Type': 'application/json',},
     body : JSON.stringify([isAdmin,username])
@@ -810,8 +810,6 @@ fetch(host+"/ChangeAdmin",{
 
     }
     
-
-
 
 
 function SetPersonnels(tbody){

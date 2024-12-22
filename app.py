@@ -190,189 +190,6 @@ def saveuser():
 
 
 
-@app.route("/GetRequests",methods= ["POST"])
-def getrequests():
-    user = request.get_json()[0]
-    with sql.connect(**DBconfig) as con:
-        cursor = con.cursor()
-        cursor.execute("""
-SELECT 
-    requests.type,
-    requests.status AS shift,
-    requests.day,
-    requests.DepartmentsID,
-    requests.commit,
-    requestlog.status
-FROM
-    requests
-        JOIN
-    requestlog ON requests.RequestID = requestlog.RequestID
-WHERE
-    requests.PersonnelID = %s;  """,(user,))
-            
-        data = cursor.fetchall()
-        cursor.close()
-    
-    return data,200
-
-
-
-@app.route("/ChangeRequest",methods= ["POST"])
-def ChangeRequest():
-    data = request.get_json()
-    Type = data["type"] 
-    with sql.connect(**DBconfig) as con:
-        cursor = con.cursor()
-        cursor.execute("UPDATE requestlog SET status = %s ,adminAction = %s WHERE (RequestlogID = %s);",
-                        (data["status"],data["adminAction"],data["RequestlogID"],))
-        con.commit()
-        cursor.close()
-
-    if data["status"] == "accept" :
-       
-       if Type == "get":
-            with sql.connect(**DBconfig) as con:
-                cursor = con.cursor()
-                params =  (Personnels[data["username"]]["PersonnelID"],data["ShiftsID"][0],data["DepartmentsID"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
-                cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
-                            ,params)
-                
-                con.commit()
-                cursor.close()
-
-       elif Type == "remove":
-           with sql.connect(**DBconfig) as con:
-                cursor = con.cursor()
-                cursor.execute("SET SQL_SAFE_UPDATES = 0;")
-                params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["DepartmentsID"],data["ShiftsID"][0],)
-                cursor.execute("""
-    DELETE log FROM shiftassignments AS log
-    WHERE
-        log.date = %s
-        AND log.day = %s
-        AND log.PersonnelID = %s
-        AND log.DepartmentsID = %s
-        AND log.ShiftsID = %s;
-                            """,params)
-                            
-                con.commit()
-                cursor.close()
-            
-
-       elif Type == "change":
-           with sql.connect(**DBconfig) as con:
-                cursor = con.cursor()
-                cursor.execute("SET SQL_SAFE_UPDATES = 0;")
-                params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["DepartmentsID"],data["ShiftsID"][0],)
-                cursor.execute("""
-    DELETE log FROM shiftassignments AS log
-    WHERE
-        log.date = %s
-        AND log.day = %s
-        AND log.PersonnelID = %s
-        AND log.DepartmentsID = %s
-        AND log.ShiftsID = %s;
-                            """,params)
-                            
-                con.commit()
-                cursor.close()
-            
-                cursor = con.cursor()
-                params =  (Personnels[data["username"]]["PersonnelID"],data["ShiftsID"][1],data["DepartmentsID"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
-                cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
-                            ,params)
-                
-                con.commit()
-                cursor.close()
-
-
-        
-       elif Type == "off":
-           with sql.connect(**DBconfig) as con:
-                cursor = con.cursor()
-                cursor.execute("SET SQL_SAFE_UPDATES = 0;")
-                params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["DepartmentsID"],)
-                cursor.execute("""
-    DELETE log FROM shiftassignments AS log
-    WHERE
-        log.date = %s
-        AND log.day = %s
-        AND log.PersonnelID = %s
-        AND log.DepartmentsID = %s;
-                            """,params)
-                            
-                con.commit()
-                cursor.close()
-
-
-                cursor = con.cursor()
-                params =  (Personnels[data["username"]]["PersonnelID"],0,data["DepartmentsID"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
-                cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
-                            ,params)
-                
-                con.commit()
-                cursor.close()
-        
-
-    return [],200
-
-
-
-@app.route("/SaveShift",methods= ["POST"])
-def saveshift():
-    data = request.get_json()
-    shifts = data[1]
-    data = data[0]
-    
-    with sql.connect(**DBconfig) as con:
-            cursor = con.cursor()
-            cursor.execute("SET SQL_SAFE_UPDATES = 0;")
-            params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["selectValue"],)
-            cursor.execute("""
-DELETE log FROM shiftassignments AS log
-WHERE
-    log.date = %s
-    AND log.day = %s
-    AND log.PersonnelID = %s
-    AND log.DepartmentsID = %s;
-                           """,params)
-            
-            con.commit()
-            cursor.close()
-
-    for sh in shifts:
-        with sql.connect(**DBconfig) as con:
-            cursor = con.cursor()
-            params =  (Personnels[data["username"]]["PersonnelID"],int(sh),data["selectValue"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
-            cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
-                           ,params)
-            
-            con.commit()
-            cursor.close()
-
-    return [],200
-
-
-
-
-@app.route("/ChangeAdmin",methods= ["POST"])
-def ChangeAdmin():
-    data = request.get_json()
-    with sql.connect(**DBconfig) as con:
-        cursor = con.cursor()
-        cursor.execute("UPDATE personnel SET isAdmin = %s WHERE (username = %s);",
-                       (not data[0],data[1],))
-        print((not data[0],data[1],))
-        con.commit()
-        cursor.close()
-    
-    return [],200
-
-
-
-
-
-
 @app.route("/SetData/<key>",methods= ["POST"])
 def setdata(key):
 
@@ -407,23 +224,198 @@ def setdata(key):
                 con.commit()
                 cursor.close()
         
-    elif key == "SaveRequest":
+
+
+    elif key == "GetRequests":
+        user = request.get_json()[0]
+        with sql.connect(**DBconfig) as con:
+            cursor = con.cursor()
+            cursor.execute("""
+    SELECT 
+        requests.type,
+        requests.status AS shift,
+        requests.day,
+        requests.DepartmentsID,
+        requests.commit,
+        requestlog.status
+    FROM
+        requests
+            JOIN
+        requestlog ON requests.RequestID = requestlog.RequestID
+    WHERE
+        requests.PersonnelID = %s;  """,(user,))
+                
+            data = cursor.fetchall()
+            cursor.close()
+        
+        return data,200
+
+
+    elif key == "ChangeRequest":
+        data = request.get_json()
+        Type = data["type"] 
+        with sql.connect(**DBconfig) as con:
+            cursor = con.cursor()
+            cursor.execute("UPDATE requestlog SET status = %s ,adminAction = %s WHERE (RequestlogID = %s);",
+                            (data["status"],data["adminAction"],data["RequestlogID"],))
+            con.commit()
+            cursor.close()
+
+        if data["status"] == "accept" :
+        
+            if Type == "get":
+                with sql.connect(**DBconfig) as con:
+                    cursor = con.cursor()
+                    cursor.execute("SET SQL_SAFE_UPDATES = 0;")
+                    params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["DepartmentsID"],)
+                    cursor.execute("""
+        DELETE log FROM shiftassignments AS log
+        WHERE
+            log.date = %s
+            AND log.day = %s
+            AND log.PersonnelID = %s
+            AND log.DepartmentsID = %s
+            AND log.ShiftsID = 0;
+                                """,params)
+                                
+                    con.commit()
+                    cursor.close()
+
+
+                    cursor = con.cursor()
+                    params =  (Personnels[data["username"]]["PersonnelID"],data["ShiftsID"][0],data["DepartmentsID"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
+                    cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
+                                ,params)
+                    
+                    con.commit()
+                    cursor.close()
+
+            elif Type == "remove":
+                with sql.connect(**DBconfig) as con:
+                    cursor = con.cursor()
+                    cursor.execute("SET SQL_SAFE_UPDATES = 0;")
+                    params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["DepartmentsID"],data["ShiftsID"][0],)
+                    cursor.execute("""
+        DELETE log FROM shiftassignments AS log
+        WHERE
+            log.date = %s
+            AND log.day = %s
+            AND log.PersonnelID = %s
+            AND log.DepartmentsID = %s
+            AND log.ShiftsID = %s;
+                                """,params)
+                                
+                    con.commit()
+                    cursor.close()
+                    
+
+            elif Type == "change":
+                with sql.connect(**DBconfig) as con:
+                        cursor = con.cursor()
+                        cursor.execute("SET SQL_SAFE_UPDATES = 0;")
+                        params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["DepartmentsID"],data["ShiftsID"][0],)
+                        cursor.execute("""
+            DELETE log FROM shiftassignments AS log
+            WHERE
+                log.date = %s
+                AND log.day = %s
+                AND log.PersonnelID = %s
+                AND log.DepartmentsID = %s
+                AND log.ShiftsID = %s;
+                                    """,params)
+                                    
+                        con.commit()
+                        cursor.close()
+                    
+                        cursor = con.cursor()
+                        params =  (Personnels[data["username"]]["PersonnelID"],data["ShiftsID"][1],data["DepartmentsID"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
+                        cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
+                                    ,params)
+                        
+                        con.commit()
+                        cursor.close()
+
+
+                
+            elif Type == "off":
+                with sql.connect(**DBconfig) as con:
+                        cursor = con.cursor()
+                        cursor.execute("SET SQL_SAFE_UPDATES = 0;")
+                        params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["DepartmentsID"],)
+                        cursor.execute("""
+            DELETE log FROM shiftassignments AS log
+            WHERE
+                log.date = %s
+                AND log.day = %s
+                AND log.PersonnelID = %s
+                AND log.DepartmentsID = %s;
+                                    """,params)
+                                    
+                        con.commit()
+                        cursor.close()
+
+
+                        cursor = con.cursor()
+                        params =  (Personnels[data["username"]]["PersonnelID"],0,data["DepartmentsID"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
+                        cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
+                                    ,params)
+                        
+                        con.commit()
+                        cursor.close()
+
+
+
+    elif key == "SaveShift":
+   
+        data = request.get_json()
+        shifts = data[1]
+        data = data[0]
+        
+        with sql.connect(**DBconfig) as con:
+                cursor = con.cursor()
+                cursor.execute("SET SQL_SAFE_UPDATES = 0;")
+                params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["selectValue"],)
+                cursor.execute("""
+    DELETE log FROM shiftassignments AS log
+    WHERE
+        log.date = %s
+        AND log.day = %s
+        AND log.PersonnelID = %s
+        AND log.DepartmentsID = %s;
+                            """,params)
+                
+                con.commit()
+                cursor.close()
+
+        for sh in shifts:
+            with sql.connect(**DBconfig) as con:
+                cursor = con.cursor()
+                params =  (Personnels[data["username"]]["PersonnelID"],int(sh),data["selectValue"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
+                cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
+                            ,params)
+                
+                con.commit()
+                cursor.close()
+
+ 
+    elif key == "ChangeAdmin":
+        data = request.get_json()
+        with sql.connect(**DBconfig) as con:
+            cursor = con.cursor()
+            cursor.execute("UPDATE personnel SET isAdmin = %s WHERE (username = %s);",
+                        (not data[0],data[1],))
+            print((not data[0],data[1],))
+            con.commit()
+            cursor.close()
+
+
+    elif key == "":
         pass        
-    elif key == "SaveRequest":
+    elif key == "":
         pass        
-    elif key == "SaveRequest":
+    elif key == "":
         pass        
-    elif key == "SaveRequest":
-        pass        
-    elif key == "SaveRequest":
-        pass        
-    elif key == "SaveRequest":
-        pass        
-    elif key == "SaveRequest":
-        pass        
-    elif key == "SaveRequest":
-        pass        
-    
+
 
 
      
@@ -495,6 +487,14 @@ FROM
 
     elif key == "GetPersonnels":
         data = Personnels
+
+    elif key == "":
+        pass        
+    elif key == "":
+        pass        
+    elif key == "":
+        pass   
+    
     
     return data,200
 
