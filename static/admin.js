@@ -320,7 +320,7 @@ fetch(host+"/SetData/ChangeAdmin",{
     
 
 
-function SetPersonnels(tbody){
+function SetNoShiftPersonnels(tbody){
 
 fetch(host+"/GetData/GetPersonnels",{
     method: 'GET',
@@ -336,16 +336,14 @@ headers: { 'Content-Type': 'application/json',}})
     
 
     if(response){
+        if (!Persennols[0]) Persennols = response;
 
         let currentUsers = []
-
         const trs = tbody.querySelectorAll("tr")
         trs.forEach(tr=>{ 
             const tdID = tr.querySelector("td").id;
             currentUsers.push(JSON.parse(tdID)["username"]) })
         
-        
-        if (!Persennols[0]) Persennols = response;
         for (key in response){
             if (!currentUsers.includes(response[key]["username"]))
             AddRow(tbody,[response[key]["name"],"-","-",null,null,null,null,null,null,null],response[key]["username"])
@@ -498,7 +496,7 @@ if (AllShifts && !reLoade){
     
         });
     
-    SetPersonnels(tbody);
+    SetNoShiftPersonnels(tbody);
     setTimeout(()=>{SetTableEvent(table)},500);
     
 }else{
@@ -517,6 +515,14 @@ headers: { 'Content-Type': 'application/json',}})
     
     let dep = document.querySelector("select.dep");
     if (response[0]){
+    if (response[0] == "noData"){
+
+        for (key in Persennols)
+            AddRow(tbody,[Persennols[key]["name"],"-","-",null,null,null,null,null,null,null],Persennols[key]["username"])
+            
+
+    }else {
+
     AllShifts = JSON.stringify(response);
     let customWorkHours = {};
     AllHourWorks.forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});
@@ -527,16 +533,14 @@ headers: { 'Content-Type': 'application/json',}})
 
         if (user_dep == dep.value)
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
+        
+        SetNoShiftPersonnels(tbody)
+    }); }
 
-    });
-
-    SetPersonnels(tbody);
     setTimeout(()=>{SetTableEvent(table)},500);
 
-    }else{
+    }else
     console.log("Data Error . . . !");
-    SetPersonnels(tbody);
-    setTimeout(()=>{SetTableEvent(table)},500);   }
     
     })  
 .catch(er => {

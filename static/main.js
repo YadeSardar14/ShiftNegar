@@ -370,12 +370,12 @@ my_table.appendChild(my_tbody);
 
 
 if (AllShifts){
-
     const dep = document.querySelector("select.dep");
     const all = JSON.parse(AllShifts);
     all.forEach(row => {
         row.pop(); 
         let user_dep = row.pop(); 
+        row[2] = (row[2] == "hourly"?"ساعتی":row[2] == "official"? "رسمی" : row[2])
         if (user_dep == dep.value)
         AddRow(tbody,row);      });
     
@@ -386,9 +386,11 @@ if (AllShifts){
 
 }else{
 
-fetch(host+"/GetData/GetTable",{
-    method: 'GET',
-headers: { 'Content-Type': 'application/json',}})
+fetch(host+"/SetData/GetTable",{
+    method: 'POST',
+headers: { 'Content-Type': 'application/json',},
+body : JSON.stringify([0])})
+
 .then(response => {
     if (response.ok)
     return response.json();
@@ -399,7 +401,7 @@ headers: { 'Content-Type': 'application/json',}})
 .then(response => {
     
     let dep = document.querySelector("select.dep");
-    if (response[0]){
+    if (response[0] && response[0] !== "noData"){
     AllShifts = JSON.stringify(response);
     
     response.forEach(row => {
@@ -408,6 +410,8 @@ headers: { 'Content-Type': 'application/json',}})
         MyShifts.push(row.slice(3));
 
         let user_dep = row.pop(); 
+        row[2] = (row[2] == "hourly"?"ساعتی":row[2] == "official"? "رسمی" : row[2])
+        if (user_dep == dep.value)
         if (user_dep == dep.value)
         AddRow(tbody,row);
     });

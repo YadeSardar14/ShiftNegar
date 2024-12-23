@@ -1,7 +1,8 @@
 from flask import Flask,render_template,request,redirect,url_for,flash,jsonify
 import mysql.connector as sql
 from mysql.connector import IntegrityError
-from datetime import timedelta,datetime
+from datetime import timedelta,date
+from khayyam import JalaliDate
 
 app = Flask(__name__)
 
@@ -13,6 +14,7 @@ DBconfig = {
 }
 
 CURRENT_WEEKDATE = None
+WEEKDATE = dict()
 Personnels = dict()
 
 def GetUser(username,password):
@@ -25,7 +27,104 @@ def GetUser(username,password):
         return User
 
 
-def WeekDate(saturday : datetime.date):
+# def WeekDate(saturday : datetime.date):
+#     week = [saturday,
+#             saturday+timedelta(days=1),
+#             saturday+timedelta(days=2),
+#             saturday+timedelta(days=3),
+#             saturday+timedelta(days=4),
+#             saturday+timedelta(days=5),
+#             saturday+timedelta(days=6),
+#             ]
+#     return week
+
+# def GetWeekShifts():
+#     last_sat_date = None
+#     ret = None
+#     with sql.connect(**DBconfig) as con:
+#         cursor = con.cursor()
+#         cursor.execute("""
+#         SELECT 
+#     MAX(shiftassignments.date) - INTERVAL (SELECT 
+#             MAX(log.day)
+#         FROM
+#             shiftassignments AS log
+#         WHERE
+#             log.date = (SELECT 
+#                     MAX(log.date)
+#                 FROM
+#                     shiftassignments AS log)) DAY
+# FROM
+#     shiftassignments
+#      """)
+
+#         last_sat_date = cursor.fetchone()
+
+#         if last_sat_date[0]:
+#             cursor.execute("""
+#             SELECT 
+#         p.name,
+#         pos.name,
+#         p.contractType,
+#         GROUP_CONCAT(CASE
+#                 WHEN log.day = 0 THEN shifts.type
+#             END) AS sat,
+#         GROUP_CONCAT(CASE
+#                 WHEN log.day = 1 THEN shifts.type
+#             END) AS sun,
+#         GROUP_CONCAT(CASE
+#                 WHEN log.day = 2 THEN shifts.type
+#             END) AS mon,
+#         GROUP_CONCAT(CASE
+#                 WHEN log.day = 3 THEN shifts.type
+#             END) AS tue,
+#         GROUP_CONCAT(CASE
+#                 WHEN log.day = 4 THEN shifts.type
+#             END) AS wed,
+#         GROUP_CONCAT(CASE
+#                 WHEN log.day = 5 THEN shifts.type
+#             END) AS thu,
+#         GROUP_CONCAT(CASE
+#                 WHEN log.day = 6 THEN shifts.type
+#             END) AS fri,
+#         log.DepartmentsID , p.username
+#     FROM
+#         shiftassignments AS log
+#             JOIN
+#         personnel AS p ON (log.PersonnelID = p.PersonnelID)
+#             JOIN
+#         shifts ON (log.ShiftsID = shifts.ShiftsID)
+#             JOIN
+#         datashift.positions AS pos ON (p.positionID = pos.PositionsID)
+#     WHERE
+#         log.date BETWEEN %s AND (SELECT 
+#                 MAX(log.date)
+#             FROM
+#                 shiftassignments AS log)
+#     GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username
+#             ORDER BY p.isAdmin DESC;"""
+#             ,(last_sat_date))
+
+#             ret = cursor.fetchall()
+#             cursor.close()
+
+#             global CURRENT_WEEKDATE
+#             CURRENT_WEEKDATE = WeekDate(last_sat_date[0])
+                
+#             UpdateUsers()
+
+#         else:
+#             today = JalaliDate.today()
+#             last_sat_date = today - timedelta(today.weekday())
+
+        
+#     return ret
+
+
+
+
+
+def WeekDate(saturday : date):
     week = [saturday,
             saturday+timedelta(days=1),
             saturday+timedelta(days=2),
@@ -36,9 +135,11 @@ def WeekDate(saturday : datetime.date):
             ]
     return week
 
+
 def GetWeekShifts(WeekNum):
     last_sat_date = None
     ret = None
+
     with sql.connect(**DBconfig) as con:
         cursor = con.cursor()
         cursor.execute("""
@@ -56,10 +157,21 @@ FROM
     shiftassignments
      """)
 
-        last_sat_date = cursor.fetchone()
+        last_sat_date = cursor.fetchone()[0]
+        cursor.close()
 
-        if last_sat_date[0]:
-            cursor.execute("""
+        if not last_sat_date:
+            today = date.today()
+            weekday = JalaliDate.today().weekday()
+            last_sat_date = today - timedelta(weekday)
+
+        global CURRENT_WEEKDATE
+        CURRENT_WEEKDATE = WeekDate(last_sat_date)
+        last_sat_date = last_sat_date + timedelta(WeekNum * 7)
+        last_fri_date = last_sat_date + timedelta(6)
+
+        cursor = con.cursor()
+        cursor.execute("""
             SELECT 
         p.name,
         pos.name,
@@ -95,23 +207,21 @@ FROM
             JOIN
         datashift.positions AS pos ON (p.positionID = pos.PositionsID)
     WHERE
-        log.date BETWEEN %s AND (SELECT 
-                MAX(log.date)
-            FROM
-                shiftassignments AS log)
+        log.date BETWEEN %s AND %s
     GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username
             ORDER BY p.isAdmin DESC;"""
-            ,(last_sat_date))
+            ,(last_sat_date,last_fri_date))
 
-            ret = cursor.fetchall()
-            cursor.close()
+        ret = cursor.fetchall()
+        cursor.close()
 
-            global CURRENT_WEEKDATE
-            CURRENT_WEEKDATE = WeekDate(last_sat_date[0])
-                
-            UpdateUsers()
+        if not ret:
+            ret = ["noData"]
+            
+        UpdateUsers()
         
     return ret
+
 
 
 def UpdateUsers():
@@ -197,8 +307,6 @@ def setdata(key):
     status = []
 
     if key == "SingInCHeck":
-        UpdateUsers()
-
         data = request.get_json()
         if data:
             try:
@@ -371,7 +479,6 @@ def setdata(key):
     elif key == "SaveShift":
    
         data = request.get_json()
-        print((CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["selectValue"],))
         shifts = data[1]
         data = data[0]
         
@@ -434,9 +541,8 @@ def getdata(key):
     data = []
 
     if key == "GetTable":
-        data = GetWeekShifts(1)
-        if not data : data = []
-    
+        data = GetWeekShifts(0)
+
 
     elif key == "GetDepartment":
         with sql.connect(**DBconfig) as con:
