@@ -223,7 +223,6 @@ FROM
     return ret
 
 
-
 def UpdateUsers():
     
     with sql.connect(**DBconfig) as con:
@@ -262,8 +261,6 @@ GROUP BY p.username;
         ret = cursor.fetchall()
         cursor.close()
         return ret
-
-
 
 
 
@@ -320,6 +317,12 @@ def setdata(key):
                 return ["nouser"],200
         return ["nodata"], 200
     
+
+    elif key == "GetTable":
+        WeekNum = request.get_json()[0]
+        data = GetWeekShifts(WeekNum)
+        return data,200
+
 
     elif key == "SaveRequest":
         data = request.get_json()

@@ -437,7 +437,8 @@ headers: { 'Content-Type': 'application/json',}})
 
 function SetTableEvent(table) {
 
-    
+const tbody = new Date;
+const day = (tbody.getDay() == 6 ? 0 : tbody.getDay()+1);
 let tds = table.querySelectorAll("td");
 let headers = table.querySelectorAll("thead th");
 
@@ -445,7 +446,8 @@ let i = 0;
 tds.forEach((td) => {
     if(i==headers.length) i=0;
 
-        if (headers[i].className=="day"){
+        if (headers[i].className=="day" && JSON.parse(td.id)["day"] >= day ){
+        
         td.onclick= ()=>{adminShiftHandler(td);};
         td.style.backgroundColor = "rgba(131, 255, 193, 0.849)";
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
@@ -470,6 +472,8 @@ tds.forEach((td) => {
 
 
 function SetTable(reLoade = false){
+
+let Week = 0;
 
 const table = document.querySelector("table."+"main");
 let tbody = table.querySelector("tbody");
@@ -496,14 +500,17 @@ if (AllShifts && !reLoade){
     
         });
     
+    if(Week == 0 || Week == 1){
     SetNoShiftPersonnels(tbody);
-    setTimeout(()=>{SetTableEvent(table)},500);
+    setTimeout(()=>{SetTableEvent(table)},500); }
     
 }else{
 
-fetch(host+"/GetData/GetTable",{
-    method: 'GET',
-headers: { 'Content-Type': 'application/json',}})
+fetch(host+"/SetData/GetTable",{
+    method: 'POST',
+headers: { 'Content-Type': 'application/json',},
+body : JSON.stringify([Week])})
+
 .then(response => {
     if (response.ok)
     return response.json();
@@ -534,10 +541,11 @@ headers: { 'Content-Type': 'application/json',}})
         if (user_dep == dep.value)
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
         
-        SetNoShiftPersonnels(tbody)
     }); }
 
-    setTimeout(()=>{SetTableEvent(table)},500);
+    if(Week == 0 || Week == 1){
+    SetNoShiftPersonnels(tbody)
+    setTimeout(()=>{SetTableEvent(table)},500); }
 
     }else
     console.log("Data Error . . . !");
@@ -658,7 +666,7 @@ headers: { 'Content-Type': 'application/json',}})
 SetWorkHours();
 
 SetTableRequests();
-SetTable();
+// SetTable();
 setTimeout(SetTable,500);
 
 }
