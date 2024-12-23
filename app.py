@@ -57,59 +57,60 @@ FROM
      """)
 
         last_sat_date = cursor.fetchone()
-        cursor.execute("""
-        SELECT 
-    p.name,
-    pos.name,
-    p.contractType,
-    GROUP_CONCAT(CASE
-            WHEN log.day = 0 THEN shifts.type
-        END) AS sat,
-    GROUP_CONCAT(CASE
-            WHEN log.day = 1 THEN shifts.type
-        END) AS sun,
-    GROUP_CONCAT(CASE
-            WHEN log.day = 2 THEN shifts.type
-        END) AS mon,
-    GROUP_CONCAT(CASE
-            WHEN log.day = 3 THEN shifts.type
-        END) AS tue,
-    GROUP_CONCAT(CASE
-            WHEN log.day = 4 THEN shifts.type
-        END) AS wed,
-    GROUP_CONCAT(CASE
-            WHEN log.day = 5 THEN shifts.type
-        END) AS thu,
-    GROUP_CONCAT(CASE
-            WHEN log.day = 6 THEN shifts.type
-        END) AS fri,
-    log.DepartmentsID , p.username
-FROM
-    shiftassignments AS log
-        JOIN
-    personnel AS p ON (log.PersonnelID = p.PersonnelID)
-        JOIN
-    shifts ON (log.ShiftsID = shifts.ShiftsID)
-        JOIN
-    datashift.positions AS pos ON (p.positionID = pos.PositionsID)
-WHERE
-    log.date BETWEEN %s AND (SELECT 
-            MAX(log.date)
-        FROM
-            shiftassignments AS log)
-GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username
-        ORDER BY p.isAdmin DESC;"""
-        ,(last_sat_date))
 
-        ret = cursor.fetchall()
-        cursor.close()
+        if last_sat_date[0]:
+            cursor.execute("""
+            SELECT 
+        p.name,
+        pos.name,
+        p.contractType,
+        GROUP_CONCAT(CASE
+                WHEN log.day = 0 THEN shifts.type
+            END) AS sat,
+        GROUP_CONCAT(CASE
+                WHEN log.day = 1 THEN shifts.type
+            END) AS sun,
+        GROUP_CONCAT(CASE
+                WHEN log.day = 2 THEN shifts.type
+            END) AS mon,
+        GROUP_CONCAT(CASE
+                WHEN log.day = 3 THEN shifts.type
+            END) AS tue,
+        GROUP_CONCAT(CASE
+                WHEN log.day = 4 THEN shifts.type
+            END) AS wed,
+        GROUP_CONCAT(CASE
+                WHEN log.day = 5 THEN shifts.type
+            END) AS thu,
+        GROUP_CONCAT(CASE
+                WHEN log.day = 6 THEN shifts.type
+            END) AS fri,
+        log.DepartmentsID , p.username
+    FROM
+        shiftassignments AS log
+            JOIN
+        personnel AS p ON (log.PersonnelID = p.PersonnelID)
+            JOIN
+        shifts ON (log.ShiftsID = shifts.ShiftsID)
+            JOIN
+        datashift.positions AS pos ON (p.positionID = pos.PositionsID)
+    WHERE
+        log.date BETWEEN %s AND (SELECT 
+                MAX(log.date)
+            FROM
+                shiftassignments AS log)
+    GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username
+            ORDER BY p.isAdmin DESC;"""
+            ,(last_sat_date))
 
-        global CURRENT_WEEKDATE
-        CURRENT_WEEKDATE = WeekDate(last_sat_date[0])
-            
-        UpdateUsers()
+            ret = cursor.fetchall()
+            cursor.close()
+
+            global CURRENT_WEEKDATE
+            CURRENT_WEEKDATE = WeekDate(last_sat_date[0])
+                
+            UpdateUsers()
         
-
     return ret
 
 
@@ -196,6 +197,8 @@ def setdata(key):
     status = []
 
     if key == "SingInCHeck":
+        UpdateUsers()
+
         data = request.get_json()
         if data:
             try:
@@ -368,6 +371,7 @@ def setdata(key):
     elif key == "SaveShift":
    
         data = request.get_json()
+        print((CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["selectValue"],))
         shifts = data[1]
         data = data[0]
         
@@ -431,6 +435,7 @@ def getdata(key):
 
     if key == "GetTable":
         data = GetWeekShifts(1)
+        if not data : data = []
     
 
     elif key == "GetDepartment":
@@ -494,7 +499,7 @@ FROM
         pass        
     elif key == "":
         pass   
-    
+
     
     return data,200
 
