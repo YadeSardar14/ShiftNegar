@@ -280,7 +280,7 @@ if(nul)
 AddRow(my_tbody,MyHourWork.concat([null,null,null,null,null,null,null]));
 
 if (my_tbody){
-    const weekDates = JSON.parse(AllShifts[document.querySelector("table.WeekChange").id])[1]["miladi"];
+    const weekDates = JSON.parse(AllShifts[0])[1]["miladi"];
     const tbody = new Date;
 
     let tr = my_tbody.querySelectorAll("td");
@@ -442,7 +442,8 @@ body : JSON.stringify([Week])})
     
     response[0].forEach(row => {
         const username = row.pop(); 
-        if (Username==username)
+        
+        if (Username==username && Week === 0)
         MyShifts.push(row.slice(3));
 
         let user_dep = row.pop(); 
@@ -573,6 +574,7 @@ function showMyShifts(){
 
 document.querySelector("p.dep").innerHTML="شیفت های بخش";
 
+document.querySelector("table.WeekChange").style.display = "none";
 document.querySelector("table.main").style.display = "none";
 document.querySelector("table.myshifts").style.display = "table";
 
