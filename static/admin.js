@@ -4,12 +4,13 @@ var name;
 var Username;
 var UserID;
 var isAdmin;
-var AllShifts = null;
+var AllShifts = {};
 var AllHourWorks = null;
 var RequestData;
 var Shifts = {};
 var Departments = {};
 var Persennols = [];
+
 
 (()=> {
     let data = GetCookie("data");
@@ -59,10 +60,11 @@ function showAlert(event){
 
 
 function AddRow(table,rowText,data = null,type = "main"){
-
+    
     const newRow = document.createElement("tr");
     const headers = table.parentElement.querySelectorAll("thead th");
     const dep_id = document.querySelector("select.dep")
+    
 
     rowText.forEach((cell,i) => {
         const td = document.createElement("td");
@@ -71,10 +73,12 @@ function AddRow(table,rowText,data = null,type = "main"){
         if(data){
 
         if(type == "main"){
+        
         const username = data;
         if(cell==="OFF") td.style.color = "rgba(255, 20, 0, 0.56)";
-        td.id = JSON.stringify({"username" : username , "day" : headers[i].id, "selectValue" : dep_id.value , "isAdmin" : Persennols[username]["isAdmin"]});
-        
+            
+        td.id = JSON.stringify({"username" : username , "day" : headers[i].id ,"selectValue" : dep_id.value , "isAdmin" : Persennols[username]["isAdmin"]});
+    
         }else if (type == "request"){
 
             td.id = JSON.stringify(data);
@@ -122,7 +126,6 @@ function SetShifts(data){
 
 
 function ChangeRequest(data){
-console.log(data)
 data = {
     "RequestlogID" : data.slice(-1)[0],
     "adminAction" : name,
@@ -204,10 +207,11 @@ function adminShiftHandler(td,day){
 }
 
 function SaveNewShift(){
-    
+   
     const form = document.querySelector("form.adminshifthandel");
     const user = form.querySelector("label.user");
-
+    const Week = document.querySelector("table.WeekChange").id;
+    
     let newState = [];
     form.querySelectorAll("input.ch").forEach(ch=>newState.push(ch.checked));
     
@@ -232,7 +236,7 @@ function SaveNewShift(){
 fetch(host+"/SetData/SaveShift",{
     method : "POST",
     headers: { 'Content-Type': 'application/json',},
-    body : JSON.stringify([JSON.parse(user.id),shiftIDs])
+    body : JSON.stringify([JSON.parse(user.id),shiftIDs,Week])
 })
 .then(response => {
     if (response.ok){
@@ -268,7 +272,7 @@ function adminUserHandler(td){
     
     if (!form.innerHTML){
     form.style.display = "flex";
-    for (let node of JSON.parse(AllShifts)){ 
+    for (let node of JSON.parse(AllShifts[document.querySelector("table.WeekChange").id])[0]){ 
         if (data["username"] == node.pop()){
         form.innerHTML += "<h style='padding-bottom: 0.5rem;'>"+node[0]+"</h>"+"<p> سمت : "+node[1]+"</p>"+"<p> قرارداد : "+(node[2] == "hourly"?"ساعتی":node[2] == "official"? "رسمی" : node[2])+"</p>";
         break;}
@@ -437,8 +441,8 @@ headers: { 'Content-Type': 'application/json',}})
 
 function SetTableEvent(table) {
 
+const weekDates = JSON.parse(AllShifts[document.querySelector("table.WeekChange").id])[1]["miladi"];
 const tbody = new Date;
-const day = (tbody.getDay() == 6 ? 0 : tbody.getDay()+1);
 let tds = table.querySelectorAll("td");
 let headers = table.querySelectorAll("thead th");
 
@@ -446,13 +450,17 @@ let i = 0;
 tds.forEach((td) => {
     if(i==headers.length) i=0;
 
-        if (headers[i].className=="day" && JSON.parse(td.id)["day"] >= day ){
-        
+         
+        if (headers[i].className=="day" ){
+        const day_date = weekDates[JSON.parse(td.id)["day"]];
+        const day_date_js = new Date(day_date[0],day_date[1]-1,day_date[2]);
+
+        if(day_date_js.getTime() >= tbody.getTime()){
         td.onclick= ()=>{adminShiftHandler(td);};
         td.style.backgroundColor = "rgba(131, 255, 193, 0.849)";
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
         td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); });
-        
+        }
         }else if (headers[i].className=="name"){
         td.onclick = ()=>{adminUserHandler(td);};
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
@@ -471,9 +479,25 @@ tds.forEach((td) => {
 }
 
 
+function beforeWeek(){
+    const WeekHead = document.querySelector("table.WeekChange");
+    WeekHead.id = Number(WeekHead.id)-1;
+    SetTable();
+}
+
+function afterWeek(){
+    const WeekHead = document.querySelector("table.WeekChange");
+    if (Number(WeekHead.id) >= 1) return;
+
+    WeekHead.id = Number(WeekHead.id)+1;
+    SetTable();
+}
+
+
 function SetTable(reLoade = false){
 
-let Week = 0;
+const WeekHead = document.querySelector("table.WeekChange");
+let Week = Number(WeekHead.id);
 
 const table = document.querySelector("table."+"main");
 let tbody = table.querySelector("tbody");
@@ -481,15 +505,23 @@ tbody.remove();
 tbody = document.createElement("tbody");
 table.appendChild(tbody);
 
-if (AllShifts && !reLoade){
-
+if (AllShifts[Week] && !reLoade){
+    
     const dep = document.querySelector("select.dep");
-    const all = JSON.parse(AllShifts);
+    const all = JSON.parse(AllShifts[Week]);
+    WeekHead.querySelector("th.mid").innerHTML = all[1]["shamsi"][6][0]+" / "+all[1]["shamsi"][6][1]+" / "+all[1]["shamsi"][6][2] +"&nbsp;&nbsp;  -  &nbsp;&nbsp;"+all[1]["shamsi"][0][0]+" / "+all[1]["shamsi"][0][1]+" / "+all[1]["shamsi"][0][2];
+    
+    if (all[0][0] == "noData"){
+        
+        for (key in Persennols)
+            AddRow(tbody,[Persennols[key]["name"],"-","-",null,null,null,null,null,null,null],Persennols[key]["username"]);
+    
+    }else {
 
     let customWorkHours = {};
     AllHourWorks.forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});
    
-    all.forEach(row => {
+    all[0].forEach(row => {
 
 
         let username = row.pop(); 
@@ -498,9 +530,9 @@ if (AllShifts && !reLoade){
         if (user_dep == dep.value)
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
     
-        });
+        });     }
     
-    if(Week == 0 || Week == 1){
+    if(Week >= 0){
     SetNoShiftPersonnels(tbody);
     setTimeout(()=>{SetTableEvent(table)},500); }
     
@@ -522,31 +554,34 @@ body : JSON.stringify([Week])})
     
     let dep = document.querySelector("select.dep");
     if (response[0]){
-    if (response[0] == "noData"){
 
+    WeekHead.querySelector("th.mid").innerHTML = response[1]["shamsi"][6][0]+" / "+response[1]["shamsi"][6][1]+" / "+response[1]["shamsi"][6][2] +"&nbsp;&nbsp;  -  &nbsp;&nbsp;"+response[1]["shamsi"][0][0]+" / "+response[1]["shamsi"][0][1]+" / "+response[1]["shamsi"][0][2];
+    if (response[0][0] == "noData"){
+        
         for (key in Persennols)
             AddRow(tbody,[Persennols[key]["name"],"-","-",null,null,null,null,null,null,null],Persennols[key]["username"])
             
+        AllShifts[Week] = JSON.stringify(response);
 
     }else {
 
-    AllShifts = JSON.stringify(response);
+    AllShifts[Week] = JSON.stringify(response);
+    
     let customWorkHours = {};
     AllHourWorks.forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});
    
-    response.forEach(row => {
+    response[0].forEach(row => {
         const username = row.pop(); 
         let user_dep = row.pop(); 
 
         if (user_dep == dep.value)
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
         
+        SetNoShiftPersonnels(tbody)
     }); }
 
-    if(Week == 0 || Week == 1){
-    SetNoShiftPersonnels(tbody)
-    setTimeout(()=>{SetTableEvent(table)},500); }
-
+    if(Week >= 0)
+    setTimeout(()=>{SetTableEvent(table)},500); 
     }else
     console.log("Data Error . . . !");
     
@@ -665,7 +700,7 @@ headers: { 'Content-Type': 'application/json',}})
 
 SetWorkHours();
 
-SetTableRequests();
+setTimeout(SetTableRequests,1000);
 // SetTable();
 setTimeout(SetTable,500);
 
@@ -685,6 +720,7 @@ function exit(){
 function showreq(){
 
     document.querySelector("table.main").style.display = "none";
+    document.querySelector("table.WeekChange").style.display = "none";
     document.querySelector("table.myrequests").style.display = "table";
 
     document.querySelector("div#main_btn").style.display = "none";
@@ -702,6 +738,7 @@ document.querySelector("p.dep").innerHTML="برنامه پرسنل بخش";
 document.querySelector("div#main_btn").style.display = "flex";
 document.querySelector("div#back_btn").style.display = "none";
 
+document.querySelector("table.WeekChange").style.display = "table";
 document.querySelector("table.main").style.display = "table";
 document.querySelector("table.myrequests").style.display = "none";
 

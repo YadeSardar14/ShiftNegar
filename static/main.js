@@ -4,7 +4,7 @@ var name;
 var Username;
 var UserID;
 var isAdmin;
-var AllShifts = null;
+var AllShifts = {};
 var MyShifts = [];
 var AllHourWorks = null;
 var MyHourWork;
@@ -280,16 +280,22 @@ if(nul)
 AddRow(my_tbody,MyHourWork.concat([null,null,null,null,null,null,null]));
 
 if (my_tbody){
-   
+    const weekDates = JSON.parse(AllShifts[document.querySelector("table.WeekChange").id])[1]["miladi"];
+    const tbody = new Date;
+
     let tr = my_tbody.querySelectorAll("td");
     let headers = my_table.querySelectorAll("thead th")
     tr.forEach((td,i) => {
         if (headers[i].className=="day"){
+        const day_date = weekDates[headers[i].id];
+        const day_date_js = new Date(day_date[0],day_date[1]-1,day_date[2]);
+
+        if(day_date_js.getTime() >= tbody.getTime()){
         td.addEventListener("click",()=>{requesthandler(td,headers[i])});
         td.style.backgroundColor = "rgba(131, 255, 193, 0.849)";
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); })
         td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); })
-    }
+    }}
 
     });
 }
@@ -354,7 +360,27 @@ body: JSON.stringify([UserID])})
 
 
 
+
+function beforeWeek(){
+    const WeekHead = document.querySelector("table.WeekChange");
+    WeekHead.id = Number(WeekHead.id)-1;
+    SetTable();
+}
+
+function afterWeek(){
+    const WeekHead = document.querySelector("table.WeekChange");
+    if (Number(WeekHead.id) >= 1) return;
+
+    WeekHead.id = Number(WeekHead.id)+1;
+    SetTable();
+}
+
+
+
 function SetTable(){
+
+const WeekHead = document.querySelector("table.WeekChange");
+let Week = Number(WeekHead.id);
 
 const table = document.querySelector("table."+"main");
 let tbody = table.querySelector("tbody");
@@ -369,27 +395,30 @@ my_tbody = document.createElement("tbody");
 my_table.appendChild(my_tbody);
 
 
-if (AllShifts){
+if (AllShifts[Week]){
     const dep = document.querySelector("select.dep");
-    const all = JSON.parse(AllShifts);
-    all.forEach(row => {
+    const all = JSON.parse(AllShifts[Week]);
+
+    WeekHead.querySelector("th.mid").innerHTML = all[1]["shamsi"][6][0]+" / "+all[1]["shamsi"][6][1]+" / "+all[1]["shamsi"][6][2] +"&nbsp;&nbsp;  -  &nbsp;&nbsp;"+all[1]["shamsi"][0][0]+" / "+all[1]["shamsi"][0][1]+" / "+all[1]["shamsi"][0][2];
+    
+    if (all[0][0] != "noData"){
+
+    all[0].forEach(row => {
         row.pop(); 
         let user_dep = row.pop(); 
         row[2] = (row[2] == "hourly"?"ساعتی":row[2] == "official"? "رسمی" : row[2])
         if (user_dep == dep.value)
         AddRow(tbody,row);      });
     
-        
-        
         let myshifts = JSON.stringify(MyShifts);
-        SetTableMyShifts(dep,JSON.parse(myshifts));
+        SetTableMyShifts(dep,JSON.parse(myshifts)); }
 
 }else{
-
+    
 fetch(host+"/SetData/GetTable",{
     method: 'POST',
 headers: { 'Content-Type': 'application/json',},
-body : JSON.stringify([0])})
+body : JSON.stringify([Week])})
 
 .then(response => {
     if (response.ok)
@@ -401,17 +430,23 @@ body : JSON.stringify([0])})
 .then(response => {
     
     let dep = document.querySelector("select.dep");
-    if (response[0] && response[0] !== "noData"){
-    AllShifts = JSON.stringify(response);
     
-    response.forEach(row => {
+    if (response[0]){
+        WeekHead.querySelector("th.mid").innerHTML = response[1]["shamsi"][6][0]+" / "+response[1]["shamsi"][6][1]+" / "+response[1]["shamsi"][6][2] +"&nbsp;&nbsp;  -  &nbsp;&nbsp;"+response[1]["shamsi"][0][0]+" / "+response[1]["shamsi"][0][1]+" / "+response[1]["shamsi"][0][2];
+    
+    if (response[0][0] == "noData")
+        AllShifts[Week] = JSON.stringify(response);
+
+    else {
+    AllShifts[Week] = JSON.stringify(response);
+    
+    response[0].forEach(row => {
         const username = row.pop(); 
         if (Username==username)
         MyShifts.push(row.slice(3));
 
         let user_dep = row.pop(); 
         row[2] = (row[2] == "hourly"?"ساعتی":row[2] == "official"? "رسمی" : row[2])
-        if (user_dep == dep.value)
         if (user_dep == dep.value)
         AddRow(tbody,row);
     });
@@ -422,7 +457,7 @@ body : JSON.stringify([0])})
     SetTableMyShifts(dep,JSON.parse(myshifts));
     }catch{
     console.log("Error in set my shift table.");}
-
+    }
 
     }else
     console.log("Data Error . . . !");
@@ -519,8 +554,8 @@ headers: { 'Content-Type': 'application/json',}})
     });
 
 SetTableRequests();
-SetTable();
-setTimeout(SetTable,1000);
+// SetTable();
+setTimeout(SetTable,500);
 
 }
 
@@ -551,6 +586,7 @@ document.querySelector("div#back_btn").style.display = "flex";
 function showreq(){
 
     document.querySelector("table.main").style.display = "none";
+    document.querySelector("table.WeekChange").style.display = "none";
     document.querySelector("table.myrequests").style.display = "table";
 
     document.querySelector("div#main_btn").style.display = "none";
@@ -568,6 +604,7 @@ document.querySelector("p.dep").innerHTML="برنامه پرسنل بخش";
 document.querySelector("div#main_btn").style.display = "flex";
 document.querySelector("div#back_btn").style.display = "none";
 
+document.querySelector("table.WeekChange").style.display = "table";
 document.querySelector("table.main").style.display = "table";
 document.querySelector("table.myshifts").style.display = "none";
 document.querySelector("table.myrequests").style.display = "none";

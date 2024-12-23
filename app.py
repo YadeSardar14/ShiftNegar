@@ -124,7 +124,8 @@ def GetUser(username,password):
 
 
 
-def WeekDate(saturday : date):
+def WeekDate(saturday : date, type = "miladi"):
+    if type == "shamsi": saturday = JalaliDate(saturday)
     week = [saturday,
             saturday+timedelta(days=1),
             saturday+timedelta(days=2),
@@ -135,30 +136,31 @@ def WeekDate(saturday : date):
             ]
     return week
 
-
+last_sat_date = None
 def GetWeekShifts(WeekNum):
-    last_sat_date = None
+    global last_sat_date
     ret = None
+    last_sat_date = None
 
     with sql.connect(**DBconfig) as con:
-        cursor = con.cursor()
-        cursor.execute("""
-        SELECT 
-    MAX(shiftassignments.date) - INTERVAL (SELECT 
-            MAX(log.day)
-        FROM
-            shiftassignments AS log
-        WHERE
-            log.date = (SELECT 
-                    MAX(log.date)
-                FROM
-                    shiftassignments AS log)) DAY
-FROM
-    shiftassignments
-     """)
+#         cursor = con.cursor()
+#         cursor.execute("""
+#         SELECT 
+#     MAX(shiftassignments.date) - INTERVAL (SELECT 
+#             MAX(log.day)
+#         FROM
+#             shiftassignments AS log
+#         WHERE
+#             log.date = (SELECT 
+#                     MAX(log.date)
+#                 FROM
+#                     shiftassignments AS log)) DAY
+# FROM
+#     shiftassignments
+#      """)
 
-        last_sat_date = cursor.fetchone()[0]
-        cursor.close()
+#         last_sat_date = cursor.fetchone()[0]
+#         cursor.close()
 
         if not last_sat_date:
             today = date.today()
@@ -214,13 +216,18 @@ FROM
 
         ret = cursor.fetchall()
         cursor.close()
-
+        
         if not ret:
             ret = ["noData"]
-            
-        UpdateUsers()
         
+        shamsi_dates = [[d.year,d.month,d.day] for d in WeekDate(last_sat_date,"shamsi")]
+        miladi_dates = [[d.year,d.month,d.day] for d in WeekDate(last_sat_date)]
+        ret = [ret,{"shamsi" : shamsi_dates, "miladi" : miladi_dates}]
+        
+        UpdateUsers()
+    
     return ret
+
 
 
 def UpdateUsers():
@@ -367,6 +374,7 @@ def setdata(key):
 
     elif key == "ChangeRequest":
         data = request.get_json()
+        print(data)
         Type = data["type"] 
         with sql.connect(**DBconfig) as con:
             cursor = con.cursor()
@@ -480,15 +488,16 @@ def setdata(key):
 
 
     elif key == "SaveShift":
-   
+
         data = request.get_json()
         shifts = data[1]
         data = data[0]
-        
+        shiftDate = WeekDate(last_sat_date)[int(data["day"])]
+       
         with sql.connect(**DBconfig) as con:
                 cursor = con.cursor()
                 cursor.execute("SET SQL_SAFE_UPDATES = 0;")
-                params =  (CURRENT_WEEKDATE[int(data["day"])],data["day"],Personnels[data["username"]]["PersonnelID"],data["selectValue"],)
+                params =  (shiftDate,data["day"],Personnels[data["username"]]["PersonnelID"],data["selectValue"],)
                 cursor.execute("""
     DELETE log FROM shiftassignments AS log
     WHERE
@@ -504,7 +513,7 @@ def setdata(key):
         for sh in shifts:
             with sql.connect(**DBconfig) as con:
                 cursor = con.cursor()
-                params =  (Personnels[data["username"]]["PersonnelID"],int(sh),data["selectValue"],CURRENT_WEEKDATE[int(data["day"])],data["day"],)
+                params =  (Personnels[data["username"]]["PersonnelID"],int(sh),data["selectValue"],shiftDate,data["day"],)
                 cursor.execute("INSERT INTO shiftassignments (PersonnelID,ShiftsID,DepartmentsID,date,day) VALUES (%s,%s,%s,%s,%s);"
                             ,params)
                 

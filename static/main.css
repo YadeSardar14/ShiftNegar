@@ -69,6 +69,24 @@ th.day{
     
 }
 
+table.WeekChange th{
+
+    background: rgba(92, 167, 252, 0.753);
+    border: 1px solid rgba(37, 132, 255, 0.459)ک
+
+}
+
+table.WeekChange th.mid{
+
+    width: 85%;
+    font-weight: normal;
+    font-size: small;
+}
+
+table.WeekChange th.r:hover,table.WeekChange th.l:hover {
+
+    background: rgba(40, 140, 255, 0.548);
+}
 
 
 .tdhoverefect{
