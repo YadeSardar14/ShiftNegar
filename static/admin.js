@@ -372,7 +372,7 @@ headers: { 'Content-Type': 'application/json',}})
 
 
 
-function SetRequestTableEvent(table) {
+function SetRequestTableEvent(table,st) {
     
 let tds = table.querySelectorAll("td");
 let headers = table.querySelectorAll("thead th");
@@ -381,10 +381,12 @@ let i = 0;
 tds.forEach((td) => {
     if(i==headers.length) i=0;
         if (headers[i].className=="status"){
+
+        if(st == "current"){
         td.addEventListener("click",()=>{adminRequestHandler(td);});
         td.addEventListener("mouseenter",()=>{td.classList.add("tdhoverefect"); });
         td.addEventListener("mouseleave",()=>{td.classList.remove("tdhoverefect"); });
-
+        }
 
         if(td.textContent == "رد شده") td.style.backgroundColor = "rgba(255, 140, 140, 0.699)";
         else if (td.textContent == "تایید شده") td.style.backgroundColor = "rgba(103, 255, 154, 0.699)";
@@ -438,7 +440,8 @@ headers: { 'Content-Type': 'application/json',}})
 
         AddRow(my_tbody,row,[typeText].concat(req),"request");
     }
-    SetRequestTableEvent(my_table);
+
+    SetRequestTableEvent(my_table,st);
     }})  
 .catch(er => {
         console.log("Fetch Error");

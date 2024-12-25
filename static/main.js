@@ -23,7 +23,7 @@ var Departments = {};
         if (isAdmin) window.location = host+"/Admin";
 
         name = data[1];
-        Username = GetCookie("username");
+        Username = GetCookie("username").toLowerCase();
         UserID = data[2];
         
         document.querySelector("p.user").innerHTML = name;
@@ -451,7 +451,7 @@ body : JSON.stringify([Week])})
     AllShifts[Week] = JSON.stringify(response);
     
     response[0].forEach(row => {
-        const username = row.pop(); 
+        const username = row.pop().toLowerCase(); 
         
         if (Username==username && Week === 0)
         MyShifts.push(row.slice(3));
@@ -550,7 +550,7 @@ headers: { 'Content-Type': 'application/json',}})
     if (response[0]){
 
         for(let user of response){
-        if(user["username"]==Username){
+        if(user["username"].toLowerCase()==Username){
         MyHourWork = [user["worktime"],user["state"]];
         break;} }
 
