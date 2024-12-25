@@ -59,6 +59,13 @@ function showAlert(event){
 }
 
 
+window.addEventListener("load",function(){
+
+    document.querySelector("div.loading").style.opacity = "0";
+    this.setTimeout(()=>{document.querySelector("div.loading").style.display = "none"},2500);
+});
+
+
 function AddRow(table,data){
 
     const newRow = document.createElement("tr");
@@ -70,7 +77,7 @@ function AddRow(table,data){
         else if (cell == "تایید شده") td.style.backgroundColor = "rgba(103, 255, 154, 0.699)";
 
         if(cell==="OFF") td.style.color = "rgba(255, 20, 0, 0.56)";
-        
+
         newRow.appendChild(td);
     })
 

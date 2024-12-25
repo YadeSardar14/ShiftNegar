@@ -11,6 +11,12 @@ var Shifts = {};
 var Departments = {};
 var Persennols = [];
 
+window.addEventListener("load",function(){
+
+    document.querySelector("div.loading").style.opacity = "0";
+    this.setTimeout(()=>{document.querySelector("div.loading").style.display = "none"},2500);
+});
+
 
 (()=> {
     let data = GetCookie("data");

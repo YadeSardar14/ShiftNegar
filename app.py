@@ -1,4 +1,4 @@
-from flask import Flask,render_template,request,redirect,url_for,flash,jsonify
+from flask import Flask,render_template,request,jsonify
 import mysql.connector as sql
 from mysql.connector import IntegrityError
 from datetime import timedelta,date
@@ -33,103 +33,6 @@ def GetUser(username,password):
         User = cursor.fetchone()
         cursor.close()
         return User
-
-
-# def WeekDate(saturday : datetime.date):
-#     week = [saturday,
-#             saturday+timedelta(days=1),
-#             saturday+timedelta(days=2),
-#             saturday+timedelta(days=3),
-#             saturday+timedelta(days=4),
-#             saturday+timedelta(days=5),
-#             saturday+timedelta(days=6),
-#             ]
-#     return week
-
-# def GetWeekShifts():
-#     last_sat_date = None
-#     ret = None
-#     with sql.connect(**DBconfig) as con:
-#         cursor = con.cursor()
-#         cursor.execute("""
-#         SELECT 
-#     MAX(shiftassignments.date) - INTERVAL (SELECT 
-#             MAX(log.day)
-#         FROM
-#             shiftassignments AS log
-#         WHERE
-#             log.date = (SELECT 
-#                     MAX(log.date)
-#                 FROM
-#                     shiftassignments AS log)) DAY
-# FROM
-#     shiftassignments
-#      """)
-
-#         last_sat_date = cursor.fetchone()
-
-#         if last_sat_date[0]:
-#             cursor.execute("""
-#             SELECT 
-#         p.name,
-#         pos.name,
-#         p.contractType,
-#         GROUP_CONCAT(CASE
-#                 WHEN log.day = 0 THEN shifts.type
-#             END) AS sat,
-#         GROUP_CONCAT(CASE
-#                 WHEN log.day = 1 THEN shifts.type
-#             END) AS sun,
-#         GROUP_CONCAT(CASE
-#                 WHEN log.day = 2 THEN shifts.type
-#             END) AS mon,
-#         GROUP_CONCAT(CASE
-#                 WHEN log.day = 3 THEN shifts.type
-#             END) AS tue,
-#         GROUP_CONCAT(CASE
-#                 WHEN log.day = 4 THEN shifts.type
-#             END) AS wed,
-#         GROUP_CONCAT(CASE
-#                 WHEN log.day = 5 THEN shifts.type
-#             END) AS thu,
-#         GROUP_CONCAT(CASE
-#                 WHEN log.day = 6 THEN shifts.type
-#             END) AS fri,
-#         log.DepartmentsID , p.username
-#     FROM
-#         shiftassignments AS log
-#             JOIN
-#         personnel AS p ON (log.PersonnelID = p.PersonnelID)
-#             JOIN
-#         shifts ON (log.ShiftsID = shifts.ShiftsID)
-#             JOIN
-#         positions AS pos ON (p.positionID = pos.PositionsID)
-#     WHERE
-#         log.date BETWEEN %s AND (SELECT 
-#                 MAX(log.date)
-#             FROM
-#                 shiftassignments AS log)
-#     GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username
-#             ORDER BY p.isAdmin DESC;"""
-#             ,(last_sat_date))
-
-#             ret = cursor.fetchall()
-#             cursor.close()
-
-#             global CURRENT_WEEKDATE
-#             CURRENT_WEEKDATE = WeekDate(last_sat_date[0])
-                
-#             UpdateUsers()
-
-#         else:
-#             today = JalaliDate.today()
-#             last_sat_date = today - timedelta(today.weekday())
-
-        
-#     return ret
-
-
-
 
 
 def WeekDate(saturday : date, type = "miladi"):
@@ -354,7 +257,7 @@ def setdata(key):
                 request_id = cursor.lastrowid
                 con.commit()
                 cursor.close()
-                print(request_id)
+                
 
 
                 # #save in requestlog
@@ -392,7 +295,6 @@ def setdata(key):
 
     elif key == "ChangeRequest":
         data = request.get_json()
-        print(data)
         Type = data["type"] 
         with sql.connect(**DBconfig) as con:
             cursor = con.cursor()
@@ -545,7 +447,7 @@ def setdata(key):
             cursor = con.cursor()
             cursor.execute("UPDATE personnel SET isAdmin = %s WHERE (username = %s);",
                         (not data[0],data[1],))
-            print((not data[0],data[1],))
+        
             con.commit()
             cursor.close()
 
