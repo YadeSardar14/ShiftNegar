@@ -12,6 +12,16 @@ var RequestData;
 var Shifts = {};
 var Departments = {};
 
+
+
+window.addEventListener("load",function(){
+
+    document.querySelector("div.loading").style.opacity = "0";
+    this.setTimeout(()=>{document.querySelector("div.loading").style.display = "none"},2500);
+});
+
+
+
 (()=> {
     let data = GetCookie("data");
     if (!data)
@@ -25,11 +35,11 @@ var Departments = {};
         name = data[1];
         Username = GetCookie("username").toLowerCase();
         UserID = data[2];
-        
+
         document.querySelector("p.user").innerHTML = name;
 
         document.querySelector("div.savealert").classList.add("hide");
-                
+
         document.querySelector("div.info div#req_select").style.display = "none"
         document.querySelector("form.request_popup").style.display = "none";
         document.querySelector("table.myshifts").style.display = "none";
@@ -38,7 +48,7 @@ var Departments = {};
         SetMainPage();
     }
 
-   
+
 })()
 
 
@@ -57,13 +67,6 @@ function showAlert(event){
     event.classList.add("vis");
     event.classList.add("hidefect");
 }
-
-
-window.addEventListener("load",function(){
-
-    document.querySelector("div.loading").style.opacity = "0";
-    this.setTimeout(()=>{document.querySelector("div.loading").style.display = "none"},2500);
-});
 
 
 function AddRow(table,data){
@@ -97,12 +100,12 @@ function SetDepartments(data){
         op.value = ob["DepartmentsID"];
         dep.appendChild(op);
     })
-    
+
 }
 
 
 function SetShifts(data){
-   
+
     const shifts = document.querySelector("div#shifts");
     data.forEach(shift => {
         Shifts[shift["ShiftsID"]] = shift["type"];
@@ -131,7 +134,7 @@ if (RequestData){
 
     let newState = [];
     form.querySelectorAll("input.ch").forEach(ch=>newState.push(ch.checked));
-    
+
     if(JSON.stringify(newState) == JSON.stringify(lastSiftsState)){
         RequestData = null;
         lastSiftsState = null;
@@ -159,14 +162,14 @@ if (RequestData){
     else if(types.includes("get"))
     type = "get";
 
-    
+
     //Set Requests
 
     if (type == "off")
     requests.push({"type" : type,"UserID" : UserID,"DepartmentsID" : RequestData[0], "day" : RequestData[1], "commit" : commit ,"status" : []});
-   
+
     else if (type == "change"){
-        
+
     let s1 = null,s2 = null;
     lastSiftsState.forEach((last,i)=>{
     if(last && !newState[i]){
@@ -182,8 +185,8 @@ if (RequestData){
 
     });
     requests.push({"type" : "change","UserID" : UserID,"DepartmentsID" : RequestData[0], "day" : RequestData[1], "commit" : commit ,"status" : [s1,s2]});
-    
-   
+
+
     }else if (type == "get"){
 
     lastSiftsState.forEach((last,i)=>{
@@ -221,8 +224,8 @@ function SaveRequest(data){
         if(response.ok)
             showAlert(document.querySelector("div.savealert"));
         else
-        console.log("Save Request ERooooR");  }) 
-        
+        console.log("Save Request ERooooR");  })
+
     .catch(er => {
         console.log("Fetch Error");
     });
@@ -247,7 +250,7 @@ let dayShifts = [];
         ch.checked = false;
         if(state.textContent.includes(ch.id))
         ch.checked = true;
-        
+
         dayShifts.push(ch.checked)
     })
 
@@ -271,7 +274,7 @@ function SetTableMyShifts(dep,data){
 
 if(!data)
 return;
-    
+
 const my_table = document.querySelector("table."+"myshifts");
 let my_tbody = my_table.querySelector("tbody");
 my_tbody.remove();
@@ -286,8 +289,12 @@ nul = false;
 AddRow(my_tbody,MyHourWork.concat(row));
 break;}    }
 
-if(nul)
-AddRow(my_tbody,MyHourWork.concat([null,null,null,null,null,null,null]));
+if(nul){
+
+try{
+AddRow(my_tbody,MyHourWork.concat([null,null,null,null,null,null,null]));   }
+catch{
+AddRow(my_tbody,["-","-",null,null,null,null,null,null,null]);    }}
 
 if (my_tbody){
     const weekDates = JSON.parse(AllShifts[0])[1]["miladi"];
@@ -317,13 +324,13 @@ if (my_tbody){
 function SetTableRequests(st = "current"){
 
 
-  
+
 const my_table = document.querySelector("table."+"myrequests");
 let my_tbody = my_table.querySelector("tbody");
 my_tbody.remove();
 my_tbody = document.createElement("tbody");
 my_table.appendChild(my_tbody);
-    
+
 fetch(host+"/SetData/GetRequests",{
 method: 'POST',
 headers: { 'Content-Type': 'application/json',},
@@ -333,7 +340,7 @@ body: JSON.stringify([UserID])})
     return response.json();
 
     else
-    return "ERooooR";  })  
+    return "ERooooR";  })
 
 .then(response => {
     if (response[0]){
@@ -359,8 +366,8 @@ body: JSON.stringify([UserID])})
 
     }else
     console.log("Data Error . . . !");
-    
-    })  
+
+    })
 .catch(er => {
         console.log("Fetch Error");
     });
@@ -410,21 +417,21 @@ if (AllShifts[Week]){
     const all = JSON.parse(AllShifts[Week]);
 
     WeekHead.querySelector("th.mid").innerHTML = all[1]["shamsi"][6][0]+" / "+all[1]["shamsi"][6][1]+" / "+all[1]["shamsi"][6][2] +"&nbsp;&nbsp;  -  &nbsp;&nbsp;"+all[1]["shamsi"][0][0]+" / "+all[1]["shamsi"][0][1]+" / "+all[1]["shamsi"][0][2];
-    
+
     if (all[0][0] != "noData"){
 
     all[0].forEach(row => {
-        row.pop(); 
-        let user_dep = row.pop(); 
+        row.pop();
+        let user_dep = row.pop();
         row[2] = (row[2] == "hourly"?"ساعتی":row[2] == "official"? "رسمی" : row[2])
         if (user_dep == dep.value)
         AddRow(tbody,row);      });
-    
+
         let myshifts = JSON.stringify(MyShifts);
-        SetTableMyShifts(dep,JSON.parse(myshifts)); }
+        setTimeout(()=>{SetTableMyShifts(dep,JSON.parse(myshifts));},500); }
 
 }else{
-    
+
 fetch(host+"/SetData/GetTable",{
     method: 'POST',
 headers: { 'Content-Type': 'application/json',},
@@ -435,28 +442,28 @@ body : JSON.stringify([Week])})
     return response.json();
 
     else
-    return "ERooooR";  })  
+    return "ERooooR";  })
 
 .then(response => {
-    
+
     let dep = document.querySelector("select.dep");
-    
+
     if (response[0]){
         WeekHead.querySelector("th.mid").innerHTML = response[1]["shamsi"][6][0]+" / "+response[1]["shamsi"][6][1]+" / "+response[1]["shamsi"][6][2] +"&nbsp;&nbsp;  -  &nbsp;&nbsp;"+response[1]["shamsi"][0][0]+" / "+response[1]["shamsi"][0][1]+" / "+response[1]["shamsi"][0][2];
-    
+
     if (response[0][0] == "noData")
         AllShifts[Week] = JSON.stringify(response);
 
     else {
     AllShifts[Week] = JSON.stringify(response);
-    
+
     response[0].forEach(row => {
-        const username = row.pop().toLowerCase(); 
-        
+        const username = row.pop().toLowerCase();
+
         if (Username==username && Week === 0)
         MyShifts.push(row.slice(3));
 
-        let user_dep = row.pop(); 
+        let user_dep = row.pop();
         row[2] = (row[2] == "hourly"?"ساعتی":row[2] == "official"? "رسمی" : row[2])
         if (user_dep == dep.value)
         AddRow(tbody,row);
@@ -465,15 +472,15 @@ body : JSON.stringify([Week])})
 
     try{
     let myshifts = JSON.stringify(MyShifts);
-    SetTableMyShifts(dep,JSON.parse(myshifts));
+    setTimeout(()=>{SetTableMyShifts(dep,JSON.parse(myshifts));},500);
     }catch{
     console.log("Error in set my shift table.");}
     }
 
     }else
     console.log("Data Error . . . !");
-    
-    })  
+
+    })
 .catch(er => {
         console.log("Fetch Error");
     });
@@ -493,17 +500,17 @@ headers: { 'Content-Type': 'application/json',}})
     return response.json();
 
     else
-    return "ERooooR";  })  
+    return "ERooooR";  })
 
 .then(response => {
-    
+
     if (response[0])
     SetDepartments(response);
 
     else
     console.log("Data Error . . . !");
-    
-    })  
+
+    })
 .catch(er => {
         console.log("Fetch Error");
     });
@@ -518,17 +525,17 @@ headers: { 'Content-Type': 'application/json',}})
     return response.json();
 
     else
-    return "ERooooR";  })  
+    return "ERooooR";  })
 
 .then(response => {
-    
+
     if (response[0])
     SetShifts(response);
 
     else
     console.log("Data Error . . . !");
-    
-    })  
+
+    })
 .catch(er => {
         console.log("Fetch Error");
     });
@@ -543,14 +550,16 @@ headers: { 'Content-Type': 'application/json',}})
     return response.json();
 
     else
-    return "ERooooR";  })  
+    return "ERooooR";  })
 
 .then(response => {
     
     if (response[0]){
 
         for(let user of response){
-        if(user["username"].toLowerCase()==Username){
+
+        if(user["username"].toLowerCase()===Username){
+
         MyHourWork = [user["worktime"],user["state"]];
         break;} }
 
@@ -558,24 +567,24 @@ headers: { 'Content-Type': 'application/json',}})
 
     else
     console.log("Data Error . . . !");
-    
-    })  
+
+    })
 .catch(er => {
         console.log("Fetch Error");
     });
 
 SetTableRequests();
 // SetTable();
-setTimeout(SetTable,500);
+setTimeout(SetTable,800);
 
 }
 
 function exit(){
-  
+
     document.cookie.split(";").forEach(cookie => {
         document.cookie = cookie.split("=")[0]+ "=;"
     })
-  
+
     window.location = host+"/SingIn";
 
 }
@@ -603,10 +612,10 @@ function showreq(){
 
     document.querySelector("div#main_btn").style.display = "none";
     document.querySelector("div#back_btn").style.display = "flex";
-       
+
     document.querySelector("div.info div#main_select").style.display = "none"
     document.querySelector("div.info div#req_select").style.display = "flex"
-       
+
 
 }
 function back(){
@@ -623,6 +632,6 @@ document.querySelector("table.myrequests").style.display = "none";
 
 document.querySelector("div.info div#main_select").style.display = "flex"
 document.querySelector("div.info div#req_select").style.display = "none"
-       
-       
+
+
 }

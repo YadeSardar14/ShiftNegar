@@ -5,7 +5,7 @@ var Username;
 var UserID;
 var isAdmin;
 var AllShifts = {};
-var AllHourWorks = null;
+var AllHourWorks = {};
 var RequestData;
 var Shifts = {};
 var Departments = {};
@@ -264,8 +264,9 @@ fetch(host+"/SetData/SaveShift",{
     user.id = null;
 
     
-    setTimeout(()=>{SetTable(reLoade=true); 
-                    SetWorkHours();
+    setTimeout(()=>{SetWorkHours(Week);
+                    SetTable(reLoade=true); 
+                    
     },500);
 
 }
@@ -529,7 +530,7 @@ if (AllShifts[Week] && !reLoade){
     }else {
 
     let customWorkHours = {};
-    AllHourWorks.forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});
+    AllHourWorks[Week].forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});
    
     all[0].forEach(row => {
 
@@ -576,10 +577,12 @@ body : JSON.stringify([Week])})
     }else {
 
     AllShifts[Week] = JSON.stringify(response);
+    SetWorkHours(Week);
     
     let customWorkHours = {};
-    AllHourWorks.forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});
-   
+    setTimeout(()=>{
+    AllHourWorks[Week].forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});   
+
     response[0].forEach(row => {
         const username = row.pop(); 
         let user_dep = row.pop(); 
@@ -588,7 +591,8 @@ body : JSON.stringify([Week])})
         AddRow(tbody,[row[0]].concat(customWorkHours[username].concat(row.slice(3))),username);
         
         SetNoShiftPersonnels(tbody)
-    }); }
+    });
+    },500);      }
 
     if(Week >= 0)
     setTimeout(()=>{SetTableEvent(table)},500); 
@@ -602,11 +606,13 @@ body : JSON.stringify([Week])})
 
 }}
 
-function SetWorkHours(){
+function SetWorkHours(week = "0"){
 
-    fetch(host+"/GetData/GetHourWorkState",{
-method: 'GET',
-headers: { 'Content-Type': 'application/json',}})
+fetch(host+"/SetData/GetHourWorkState",{
+method: 'POST',
+headers: { 'Content-Type': 'application/json',},
+body : JSON.stringify([week])})
+
 .then(response => {
     if (response.ok)
     return response.json();
@@ -617,7 +623,7 @@ headers: { 'Content-Type': 'application/json',}})
 .then(response => {
     
     if (response[0])
-    AllHourWorks = response;
+    AllHourWorks[week] = response;
 
     else
     console.log("Data Error . . . !");
@@ -626,7 +632,7 @@ headers: { 'Content-Type': 'application/json',}})
 .catch(er => {
         console.log("Fetch Error");
     });
-
+console.log(AllHourWorks)
 }
 
 function SetMainPage(){

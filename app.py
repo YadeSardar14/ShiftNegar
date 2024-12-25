@@ -47,9 +47,8 @@ def WeekDate(saturday : date, type = "miladi"):
             ]
     return week
 
-last_sat_date = None
+
 def GetWeekShifts(WeekNum):
-    global last_sat_date
     ret = None
     last_sat_date = None
 
@@ -152,7 +151,13 @@ def UpdateUsers():
             Personnels.update({p["username"] : p})
 
 
-def GetHourWorkState():
+def GetHourWorkState(startDate = None,endDate = None):
+
+    if (not startDate) or (not endDate):
+        today = date.today()
+        weekday = JalaliDate.today().weekday()
+        startDate = today - timedelta(weekday)
+        endDate = startDate + timedelta(6)
 
     with sql.connect(**DBconfig) as con:
         cursor = con.cursor(dictionary=True)
@@ -169,13 +174,18 @@ SELECT
     p.username,
     p.workinghours
 FROM
-    shiftassignments AS log
+    (SELECT 
+        *
+    FROM
+        shiftassignments AS log
+    WHERE
+        log.date BETWEEN %s AND %s) AS log
         JOIN
     shifts ON (shifts.ShiftsID = log.ShiftsID)
         RIGHT JOIN
     personnel AS p ON (log.PersonnelID = p.PersonnelID)
-GROUP BY p.username;
-""")
+GROUP BY p.PersonnelID;
+""",(startDate,endDate,))
         ret = cursor.fetchall()
         cursor.close()
         return ret
@@ -239,6 +249,19 @@ def setdata(key):
     elif key == "GetTable":
         WeekNum = request.get_json()[0]
         data = GetWeekShifts(WeekNum)
+        return jsonify(data),200
+    
+
+    elif key == "GetHourWorkState":
+        week = int(request.get_json()[0])
+        
+        today = date.today()
+        weekday = JalaliDate.today().weekday()
+        last_sat_date = today - timedelta(weekday)
+        last_sat_date = last_sat_date + timedelta(week * 7)
+        last_fri_date = last_sat_date + timedelta(6)
+        
+        data = GetHourWorkState(last_sat_date,last_fri_date)
         return jsonify(data),200
 
 
@@ -408,12 +431,19 @@ def setdata(key):
 
 
     elif key == "SaveShift":
-
+        
         data = request.get_json()
         shifts = data[1]
+        Week = int(data[-1])
         data = data[0]
+
+        today = date.today()
+        weekday = JalaliDate.today().weekday()
+        last_sat_date = today - timedelta(weekday)
+        last_sat_date = last_sat_date + timedelta(Week * 7)
+        
         shiftDate = WeekDate(last_sat_date)[int(data["day"])]
-       
+
         with sql.connect(**DBconfig) as con:
                 cursor = con.cursor()
                 cursor.execute("SET SQL_SAFE_UPDATES = 0;")
