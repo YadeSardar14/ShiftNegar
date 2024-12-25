@@ -13,6 +13,14 @@ DBconfig = {
     'database': 'datashift'
 }
 
+
+# DBconfig = {
+#     'host': 'Motohayyerin.mysql.pythonanywhere-services.com',
+#     'user': 'Motohayyerin',
+#     'password': 'shift1403',
+#     'database': 'Motohayyerin$datashift'
+# }
+
 CURRENT_WEEKDATE = None
 WEEKDATE = dict()
 Personnels = dict()
@@ -95,7 +103,7 @@ def GetUser(username,password):
 #             JOIN
 #         shifts ON (log.ShiftsID = shifts.ShiftsID)
 #             JOIN
-#         datashift.positions AS pos ON (p.positionID = pos.PositionsID)
+#         positions AS pos ON (p.positionID = pos.PositionsID)
 #     WHERE
 #         log.date BETWEEN %s AND (SELECT 
 #                 MAX(log.date)
@@ -207,7 +215,7 @@ def GetWeekShifts(WeekNum):
             JOIN
         shifts ON (log.ShiftsID = shifts.ShiftsID)
             JOIN
-        datashift.positions AS pos ON (p.positionID = pos.PositionsID)
+        positions AS pos ON (p.positionID = pos.PositionsID)
     WHERE
         log.date BETWEEN %s AND %s
     GROUP BY p.name , pos.name , p.contractType , log.DepartmentsID , p.username
@@ -234,7 +242,7 @@ def UpdateUsers():
     
     with sql.connect(**DBconfig) as con:
         cursor = con.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM datashift.personnel;")
+        cursor.execute("SELECT * FROM personnel;")
         per = cursor.fetchall()
         cursor.close()
         for p in per:
@@ -299,7 +307,7 @@ def saveuser():
             return ["uniqueError"],200
         
 
-    return ["ok"], 200
+    return jsonify(["ok"]), 200
 
 
 
@@ -316,34 +324,44 @@ def setdata(key):
             try:
                 user = GetUser(data[0],data[1])
             except:
-                return ["databaseerror"],200
+                return jsonify(["databaseerror"]),200
             if user:
                 user = list(user)
-                return user,200
+                return jsonify(user),200
             else:
-                return ["nouser"],200
-        return ["nodata"], 200
+                return jsonify(["nouser"]),200
+        return jsonify(["nodata"]), 200
     
 
     elif key == "GetTable":
         WeekNum = request.get_json()[0]
         data = GetWeekShifts(WeekNum)
-        return data,200
+        return jsonify(data),200
 
 
     elif key == "SaveRequest":
         data = request.get_json()
 
-        if not CURRENT_WEEKDATE : return ["nodate"],200
+        if not CURRENT_WEEKDATE : return jsonify(["nodate"]),200
 
         with sql.connect(**DBconfig) as con:
 
             for req in  data:
+                #save in request
                 cursor = con.cursor()
                 params = (req["UserID"],req["DepartmentsID"],req["type"],req["day"],req["commit"],str(req["status"]),CURRENT_WEEKDATE[int(req["day"])],)
                 cursor.execute("INSERT INTO requests (PersonnelID, DepartmentsID, type, day, commit, status, date) VALUES (%s,%s,%s,%s,%s,%s,%s);",params)
+                request_id = cursor.lastrowid
                 con.commit()
                 cursor.close()
+                print(request_id)
+
+
+                # #save in requestlog
+                # cursor = con.cursor()
+                # cursor.execute("INSERT INTO requestlog (RequestID, status) VALUES (%s,'current');",(request_id,))
+                # con.commit()
+                # cursor.close()
         
 
 
@@ -369,7 +387,7 @@ def setdata(key):
             data = cursor.fetchall()
             cursor.close()
         
-        return data,200
+        return jsonify(data),200
 
 
     elif key == "ChangeRequest":
@@ -542,7 +560,7 @@ def setdata(key):
 
 
      
-    return status,200
+    return jsonify(status),200
 
 
 
@@ -619,18 +637,18 @@ FROM
         pass   
 
     
-    return data,200
+    return jsonify(data),200
 
 
 
 @app.route("/SingIn")
 def singn():
-    return render_template("singin.html")
+    return render_template("SingIn.html")
 
 
 @app.route("/SingUp")
 def singup():
-    return render_template("singup.html")
+    return render_template("SingUp.html")
 
 
 @app.route("/")

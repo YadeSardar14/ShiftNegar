@@ -349,7 +349,8 @@ headers: { 'Content-Type': 'application/json',}})
             currentUsers.push(JSON.parse(tdID)["username"]) })
         
         for (key in response){
-            if (!currentUsers.includes(response[key]["username"]))
+            const username = response[key]["username"];
+            if (!currentUsers.includes(username))
             AddRow(tbody,[response[key]["name"],"-","-",null,null,null,null,null,null,null],response[key]["username"])
             }
     

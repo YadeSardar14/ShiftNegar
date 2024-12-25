@@ -68,6 +68,9 @@ function AddRow(table,data){
         td.textContent = cell;
         if (cell == "رد شده") td.style.backgroundColor = "rgba(255, 140, 140, 0.699)";
         else if (cell == "تایید شده") td.style.backgroundColor = "rgba(103, 255, 154, 0.699)";
+
+        if(cell==="OFF") td.style.color = "rgba(255, 20, 0, 0.56)";
+        
         newRow.appendChild(td);
     })
 
