@@ -349,17 +349,28 @@ headers: { 'Content-Type': 'application/json',}})
     if(response){
         if (!Persennols[0]) Persennols = response;
 
+        
+        const WeekHead = document.querySelector("table.WeekChange");
+        let Week = Number(WeekHead.id);
+
         let currentUsers = []
         const trs = tbody.querySelectorAll("tr")
         trs.forEach(tr=>{ 
             const tdID = tr.querySelector("td").id;
             currentUsers.push(JSON.parse(tdID)["username"]) })
         
+        let customWorkHours = {};
+        if (AllHourWorks[Week])
+        AllHourWorks[Week].forEach(ob=>{ customWorkHours[ob["username"]]=[ob["worktime"],ob["state"]]});   
+        
         for (key in response){
             const username = response[key]["username"];
-            if (!currentUsers.includes(username))
-            AddRow(tbody,[response[key]["name"],"-","-",null,null,null,null,null,null,null],response[key]["username"])
-            }
+            if (!currentUsers.includes(username)){
+                if (AllHourWorks[Week])
+                AddRow(tbody,[Persennols[key]["name"]].concat(customWorkHours[username].concat([null,null,null,null,null,null,null])),username);    
+                else
+                AddRow(tbody,[response[key]["name"],"-","-",null,null,null,null,null,null,null],response[key]["username"])
+            }  } 
     
 
     }else
@@ -606,7 +617,8 @@ body : JSON.stringify([Week])})
 
 }}
 
-function SetWorkHours(week = "0"){
+function SetWorkHours(week = 0){
+week = Number(week);
 
 fetch(host+"/SetData/GetHourWorkState",{
 method: 'POST',
@@ -632,7 +644,6 @@ body : JSON.stringify([week])})
 .catch(er => {
         console.log("Fetch Error");
     });
-console.log(AllHourWorks)
 }
 
 function SetMainPage(){
