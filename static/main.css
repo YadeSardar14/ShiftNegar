@@ -342,6 +342,9 @@ form#popup button{
     font-size: 15;
 }
 
+form.adminuserhandel button{
+    font-size: 0.8rem !important;
+}
 
 form input.req_text{
 
@@ -403,4 +406,17 @@ table.myrequests td{
     white-space: normal;
     overflow: hidden;
 
+}
+
+
+div.develop{
+
+    font-size: xx-small;
+    color: rgba(0, 78, 48, 0.568);
+
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    /* position: fixed; */
+    bottom: 2px;
 }
