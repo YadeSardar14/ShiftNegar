@@ -21,6 +21,7 @@
 
         body{
 
+            font-family: "samin", sans-serif;
             background-image: url("../static/back.jpg");
             background-position: center;
             background-attachment: fixed;
@@ -31,6 +32,21 @@
             align-items: center;
             /* height: 100vh; */
         }
+
+
+        .vis{
+
+        opacity: 1;
+        }
+
+        .hidefect{
+        transition:opacity 7s ease;
+        opacity: 0;
+        }
+
+        .hide{ opacity: 0;
+        background-color: aqua;}
+
 
         form.singup{
 
@@ -157,6 +173,40 @@
         bottom: 5px;
         }
 
+        
+        div#alert{
+
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        position: fixed;
+
+        }
+
+
+        p#alert{
+
+        background-color: rgba(224, 0, 0, 0.521);
+        color: #ffffffb9;
+        border-radius: 10px;
+        direction: rtl;
+        font-size: 0.85rem;
+
+        display: flex;
+        justify-content: right;
+        align-items: center;
+        width: fit-content;
+        padding: 0.4rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+        position: fixed;
+        bottom: 0.2rem;
+
+
+        }
+
+
+
     </style>
 </head>
 <body>
@@ -189,6 +239,8 @@
 
     <div class="develop">Developed By MohammadKarimi</div>
 
+    <div class="problem" id="alert"> <p class="problem" id="alert"></p> </div>
+
 </body>
 
 <script>
@@ -196,6 +248,8 @@
 const host = "http://127.0.0.1:5000";
 
 (()=>{
+
+document.querySelector("div.problem").classList.add("hide"); 
 
 fetch(host+"/GetData/GetPositions",{
     method: 'GET',
@@ -220,6 +274,16 @@ headers: { 'Content-Type': 'application/json',}})
         console.log("Fetch Error");
     });
 })()
+
+
+
+function showAlert(event){
+    event.classList.remove("hidefect")
+    event.classList.remove("hide")
+    void event.offsetWidth;
+    event.classList.add("vis");
+    event.classList.add("hidefect");
+}
 
 
 function HourlyCheck(contract){
@@ -293,7 +357,10 @@ fetch(host+"/SaveUser",{
 .then(response => {
 
     if (response[0] == "uniqueError")
-    alert("این نام کاربری قبلا انتخاب شده است، لطفا یک نام کاربری دیگر انتخاب کنید.");
+    {const problem = document.querySelector("div.problem");
+    problem.querySelector("p").innerHTML="این نام کاربری قبلا انتخاب شده است، لطفا یک نام کاربری دیگر انتخاب کنید."; 
+    showAlert(problem); }
+    
     else if (response[0]="ok")
     window.location = host+"/SingIn";
 
@@ -302,7 +369,10 @@ fetch(host+"/SaveUser",{
     console.error("Save Fetch Ereor");
 })
 
-}else alert("لطفا تمام فیلد ها را پرکنید.");
+}else
+{const problem = document.querySelector("div.problem");
+problem.querySelector("p").innerHTML="لطفا تمام فیلد ها را پرکنید."; 
+showAlert(problem); }
 }
 
     

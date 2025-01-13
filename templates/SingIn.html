@@ -30,8 +30,23 @@
             display: flex;
             justify-content: center;
             align-items: center;
+        
             /* height: 100vh; */
         }
+
+        
+        .vis{
+
+        opacity: 1;
+        }
+
+        .hidefect{
+        transition:opacity 7s ease;
+        opacity: 0;
+        }
+
+        .hide{ opacity: 0;
+        background-color: aqua;}
 
         form.singin{
 
@@ -130,6 +145,40 @@
         bottom: 5px;
         }
 
+
+        
+        div#alert{
+
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        position: fixed;
+
+
+        }
+
+        
+        p#alert{
+
+        background-color: rgba(224, 0, 0, 0.521);
+        color: #ffffffb9;
+        border-radius: 10px;
+        direction: rtl;
+        font-size: 0.85rem;
+
+        display: flex;
+        justify-content: right;
+        align-items: center;
+        width: fit-content;
+        padding: 0.4rem;
+        padding-right: 1rem;
+        padding-left: 1rem;
+        position: fixed;
+        bottom: 3rem;
+
+
+        }
+
     </style>
 </head>
 <body>
@@ -149,13 +198,29 @@
     </form>
 
     <div class="develop">Developed By MohammadKarimi</div>
+
+    <div class="problem" id="alert"> <p class="problem" id="alert"></p> </div>
+   
+
 </body>
 
 <script>
 
 const host = "http://127.0.0.1:5000";
 
-(() => { document.querySelector("a#singup").href = host+"/SingUp" })()
+(() => { document.querySelector("a#singup").href = host+"/SingUp"; 
+         document.querySelector("div.problem").classList.add("hide"); })()
+
+
+
+function showAlert(event){
+    event.classList.remove("hidefect")
+    event.classList.remove("hide")
+    void event.offsetWidth;
+    event.classList.add("vis");
+    event.classList.add("hidefect");
+}
+
 
 function CheckUser(form){
     const username = form.elements["username"].value;
@@ -177,13 +242,21 @@ function CheckUser(form){
     .then(response => {
         
         if (response[0] == "nodata")
-        alert("مشکلی پیش آمده!");
+        {const problem = document.querySelector("div.problem");
+         problem.querySelector("p").innerHTML="مشکلی پیش آمده!"; 
+         showAlert(problem); }
 
         else if (response[0] == "nouser")
-        alert("نام کاربری یا رمز عبور اشتباه است!");
+        {const problem = document.querySelector("div.problem");
+         problem.querySelector("p").innerHTML="نام کاربری یا رمز عبور اشتباه است!"; 
+         showAlert(problem); }
+        
         
         else if (response[0] == "databaseerror")
-        alert("مشکلی در ارتباط با دیتابیس وجود دارد.")
+        {const problem = document.querySelector("div.problem");
+         problem.querySelector("p").innerHTML="مشکلی در ارتباط با دیتابیس وجود دارد."; 
+         showAlert(problem); }
+        
 
         else{
             document.cookie = "username="+username+"; path=/";
@@ -196,7 +269,10 @@ function CheckUser(form){
             alert("Fetch Error");
         });
     }else
-    alert("لطفا تمام فیلد هارا پر کنید.");
+    {const problem = document.querySelector("div.problem");
+    problem.querySelector("p").innerHTML="لطفا تمام فیلد هارا پر کنید."; 
+    showAlert(problem); }
+    
     
 }
 
